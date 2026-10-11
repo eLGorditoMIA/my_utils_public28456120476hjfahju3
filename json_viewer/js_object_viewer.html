@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JS Object Viewer (Template Fields)</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #111a33;
+        --panel2: #0f1730;
+        --text: #e7ecff;
+        --muted: #a9b5e6;
+        --accent: #6ea8fe;
+        --danger: #ff6b6b;
+        --ok: #51cf66;
+        --border: rgba(255, 255, 255, 0.12);
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        background: radial-gradient(1200px 900px at 20% 10%, #182458 0%, var(--bg) 55%);
+        color: var(--text);
+      }
+
+      header {
+        padding: 20px 18px 8px 18px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0.2px;
+      }
+
+      header p {
+        margin: 6px 0 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      main {
+        padding: 14px 18px 22px 18px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      @media (max-width: 980px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+
+        header {
+          padding: 16px 14px 8px 14px;
+        }
+
+        .card .card-b {
+          padding: 10px;
+        }
+
+        .row {
+          gap: 6px;
+        }
+
+        button {
+          width: 100%;
+        }
+
+        textarea {
+          min-height: 200px;
+        }
+
+        pre {
+          max-height: 420px;
+        }
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        background: rgba(17, 26, 51, 0.75);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .card .card-h {
+        padding: 10px 12px;
+        font-size: 13px;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .card .card-h > * {
+        min-width: 0;
+      }
+
+      .card .card-b {
+        padding: 12px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 240px;
+        resize: vertical;
+        box-sizing: border-box;
+        padding: 10px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(15, 23, 48, 0.85);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.4;
+        outline: none;
+      }
+
+      textarea:focus {
+        border-color: rgba(110, 168, 254, 0.65);
+        box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.15);
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      button {
+        border: 1px solid var(--border);
+        background: rgba(110, 168, 254, 0.18);
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 12px;
+        max-width: 100%;
+        white-space: nowrap;
+      }
+
+      button:hover {
+        border-color: rgba(110, 168, 254, 0.7);
+        background: rgba(110, 168, 254, 0.26);
+      }
+
+      button.secondary {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      button.danger {
+        background: rgba(255, 107, 107, 0.16);
+      }
+
+      .status {
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(15, 23, 48, 0.85);
+        color: var(--muted);
+        overflow: auto;
+        max-width: 100%;
+      }
+
+      .status.ok {
+        color: var(--ok);
+        border-color: rgba(81, 207, 102, 0.4);
+      }
+      .status.bad {
+        color: var(--danger);
+        border-color: rgba(255, 107, 107, 0.45);
+      }
+
+      pre {
+        margin: 0;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(15, 23, 48, 0.85);
+        color: var(--text);
+        overflow: auto;
+        max-height: 560px;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .small {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .kv {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--mono);
+        font-size: 12px;
+        overflow: hidden;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+
+      .kv th,
+      .kv td {
+        padding: 8px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        vertical-align: top;
+      }
+
+      .kv th {
+        text-align: left;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.05);
+        width: 38%;
+      }
+
+      .kv td {
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: rgba(15, 23, 48, 0.55);
+      }
+
+      .historyBox {
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(15, 23, 48, 0.85);
+        color: var(--muted);
+        overflow: visible;
+        max-width: 100%;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+        font-size: 11px;
+        font-family: var(--mono);
+      }
+
+      input.inline {
+        padding: 7px 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(15, 23, 48, 0.65);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 12px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .nestedPanel {
+        display: none;
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(17, 26, 51, 0.55);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>JS Object Viewer (Template Fields)</h1>
+      <p>
+        Paste a JavaScript object literal (like <span class="pill">{ u_group_policy_id: effectiveGroupPolicyId }</span>), render it, edit keys/values, drill into nested objects, and copy output as
+        quoted-keys JS or templateFields string.
+      </p>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="card-h">
+          <div>Input (JS object literal)</div>
+          <div class="small">Supports: bare keys, quoted keys, nested objects/arrays. Variables stay as identifiers (no evaluation).</div>
+        </div>
+        <div class="card-b">
+          <textarea id="input" spellcheck="false"></textarea>
+          <div class="row">
+            <button id="renderBtn">Render</button>
+            <button id="copyNormalizedBtn" class="secondary">Copy normalized object (quoted keys)</button>
+            <button id="copyTemplateFieldsBtn" class="secondary">Copy templateFields (^a=b^c=d)</button>
+            <button id="clearBtn" class="danger">Clear</button>
+          </div>
+          <div class="row">
+            <div id="status" class="status">Waiting for input…</div>
+          </div>
+
+          <div class="row" style="margin-top: 10px; align-items: flex-start">
+            <div style="width: 100%">
+              <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                <span>History</span>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+                  <button id="historyPrevBtn" class="secondary">← Prev</button>
+                  <div id="historyPageInfo" class="small" style="min-width: 140px; text-align: center">Page 1 of 1</div>
+                  <button id="historyNextBtn" class="secondary">Next →</button>
+
+                  <label class="small" style="display: flex; align-items: center; gap: 8px">
+                    Page size
+                    <input
+                      id="historyPageSize"
+                      type="number"
+                      min="1"
+                      max="50"
+                      value="6"
+                      style="
+                        width: 72px;
+                        padding: 6px 8px;
+                        border-radius: 10px;
+                        border: 1px solid rgba(255, 255, 255, 0.16);
+                        background: rgba(15, 23, 48, 0.65);
+                        color: var(--text);
+                        font-family: var(--mono);
+                        font-size: 12px;
+                      "
+                    />
+                  </label>
+
+                  <label class="small" style="display: flex; align-items: center; gap: 8px">
+                    Max saved
+                    <input
+                      id="historyLimit"
+                      type="number"
+                      min="0"
+                      max="200"
+                      value="10"
+                      style="
+                        width: 84px;
+                        padding: 6px 8px;
+                        border-radius: 10px;
+                        border: 1px solid rgba(255, 255, 255, 0.16);
+                        background: rgba(15, 23, 48, 0.65);
+                        color: var(--text);
+                        font-family: var(--mono);
+                        font-size: 12px;
+                      "
+                    />
+                  </label>
+
+                  <button id="clearHistoryBtn" class="danger">Clear history</button>
+                  <button id="purgeHistoryBtn" class="danger">Purge storage</button>
+                </div>
+              </div>
+              <div id="history" class="historyBox" style="overflow-x: hidden; white-space: normal">(no history yet)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-h">
+          <div>Readable output</div>
+          <div class="small">Edits update both outputs below.</div>
+        </div>
+        <div class="card-b">
+          <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+            <span>Normalized JS object (quoted keys)</span>
+            <button id="copyPrettyBtn" class="secondary">Copy</button>
+          </div>
+          <pre id="pretty">(rendered object will appear here)</pre>
+
+          <div style="margin-top: 10px">
+            <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+              <span>templateFields string</span>
+              <button id="copyTemplateBtn" class="secondary">Copy</button>
+            </div>
+            <pre id="templateFieldsOut">(templateFields will appear here)</pre>
+            <div class="small" style="margin-top: 6px">Note: Nested objects/arrays are JSON-stringified as the value (you can change this later if needed).</div>
+          </div>
+
+          <div style="margin-top: 12px">
+            <div class="small" style="margin: 0 0 6px 0">Key / Value (top-level)</div>
+
+            <div class="row" style="margin-top: 0; margin-bottom: 8px">
+              <button id="addFieldBtn" class="secondary">Add field</button>
+              <button id="deleteSelectedBtn" class="danger">Delete selected</button>
+              <button id="copyEditedBtn" class="secondary">Copy edited object</button>
+            </div>
+
+            <table class="kv" id="kvTable">
+              <thead>
+                <tr>
+                  <th style="width: 44px">sel</th>
+                  <th>key</th>
+                  <th>value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="3" style="color: rgba(255, 255, 255, 0.55)">(rendered table will appear here)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div id="nestedEditor" class="nestedPanel">
+              <div class="small" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px">
+                <div>
+                  <div style="font-size: 12px; color: var(--text)">Nested editor</div>
+                  <div id="nestedPath" class="small" style="margin-top: 4px">root</div>
+                </div>
+                <div class="row" style="margin: 0; gap: 8px">
+                  <button id="nestedBackBtn" class="secondary">Back</button>
+                  <button id="nestedCloseBtn" class="danger">Close</button>
+                </div>
+              </div>
+              <table class="kv" id="nestedKvTable">
+                <thead>
+                  <tr>
+                    <th style="width: 44px">sel</th>
+                    <th>key</th>
+                    <th>value</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+              <div class="row">
+                <button id="nestedAddBtn" class="secondary">Add field</button>
+                <button id="nestedDeleteBtn" class="danger">Delete selected</button>
+                <button id="nestedApplyBtn">Apply to parent</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // History paging
+      window.__historyPageSize = 6;
+      window.__historyPageIndex = 0;
+      window.__historyLimit = 10;
+
+      const HISTORY_KEY = "js_object_viewer_history_v1";
+      const HISTORY_LIMIT_KEY = "js_object_viewer_history_limit_v1";
+      const HISTORY_PAGE_SIZE_KEY = "js_object_viewer_history_page_size_v1";
+
+      function setStatus(kind, msg) {
+        const el = document.getElementById("status");
+        el.classList.remove("ok", "bad");
+        if (kind === "ok") el.classList.add("ok");
+        if (kind === "bad") el.classList.add("bad");
+        el.textContent = msg;
+      }
+
+      function saveHistory() {
+        try {
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(window.__history || []));
+          localStorage.setItem(HISTORY_LIMIT_KEY, String(window.__historyLimit ?? 10));
+          localStorage.setItem(HISTORY_PAGE_SIZE_KEY, String(window.__historyPageSize ?? 6));
+        } catch (e) {}
+      }
+
+      function loadHistory() {
+        try {
+          const raw = localStorage.getItem(HISTORY_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function loadNum(key, def, min, max) {
+        try {
+          const raw = localStorage.getItem(key);
+          const n = Number(raw);
+          if (isNaN(n)) return def;
+          return Math.max(min, Math.min(max, n));
+        } catch (e) {
+          return def;
+        }
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+
+      /**
+       * Parse a JS object literal WITHOUT evaluating identifiers.
+       * Strategy:
+       *  - Replace identifiers on RHS with string tokens __IDENT__:name
+       *  - Quote bare keys
+       *  - JSON.parse
+       *
+       * Supports:
+       *  { a: b, "c": d, nested: { x: y }, arr: [a, 1, "z"] }
+       */
+      function parseJsObjectLiteral(src) {
+        const notes = [];
+        let s = (src || "").trim();
+        if (!s) return { obj: null, notes: ["Empty input."] };
+
+        // Remove trailing semicolon if pasted from code
+        s = s.replace(/;\s*$/, "");
+
+        // Must start with { and end with }
+        if (!(s.startsWith("{") && s.endsWith("}"))) {
+          throw new Error("Input must be an object literal starting with { and ending with }.");
+        }
+
+        // Quote bare keys: a: -> "a":
+        // This is best-effort and assumes keys are simple identifiers.
+        s = s.replace(/([,{]\s*)([A-Za-z_$][\w$]*)(\s*):/g, '$1"$2"$3:');
+
+        // Replace RHS identifiers that are not true/false/null and not numbers with string tokens.
+        // We only do this in value positions after ':' or after '[' or after ',' within arrays.
+        // Best-effort: this won't handle every JS expression.
+        s = s.replace(/(:\s*|\[\s*|,\s*)([A-Za-z_$][\w$]*)(\s*)(?=[,}\]])/g, function (m, p1, ident, p3) {
+          if (ident === "true" || ident === "false" || ident === "null") return m;
+          return p1 + '"__IDENT__:' + ident + '"' + p3;
+        });
+
+        // Now it should be valid JSON
+        const obj = JSON.parse(s);
+        return { obj, notes };
+      }
+
+      function isObject(x) {
+        return !!x && typeof x === "object" && !Array.isArray(x);
+      }
+
+      function coerceValue(raw) {
+        const s = raw == null ? "" : String(raw);
+        const t = s.trim();
+        if (t === "") return "";
+        if (t === "true") return true;
+        if (t === "false") return false;
+        if (/^-?\d+(\.\d+)?$/.test(t)) return Number(t);
+
+        // Preserve identifier tokens
+        if (/^__IDENT__:[A-Za-z_$][\w$]*$/.test(t)) return t;
+
+        // JSON value?
+        try {
+          return JSON.parse(t);
+        } catch (e) {
+          return s;
+        }
+      }
+
+      function normalizeForDisplay(obj) {
+        // Convert identifier tokens into bare identifiers (for JS output)
+        function walk(x) {
+          if (Array.isArray(x)) return x.map(walk);
+          if (isObject(x)) {
+            const out = {};
+            Object.keys(x).forEach((k) => (out[k] = walk(x[k])));
+            return out;
+          }
+          if (typeof x === "string" && x.startsWith("__IDENT__:")) return x.replace("__IDENT__:", "");
+          return x;
+        }
+        return walk(obj);
+      }
+
+      function stringifyJsObject(obj, indent) {
+        // Render as JS object literal with quoted keys, and identifier values unquoted.
+        const x = obj;
+        const sp = typeof indent === "number" ? " ".repeat(indent) : "  ";
+
+        function render(val, level) {
+          const pad = sp.repeat(level);
+          const padIn = sp.repeat(level + 1);
+
+          if (Array.isArray(val)) {
+            if (!val.length) return "[]";
+            return "[\n" + val.map((v) => padIn + render(v, level + 1)).join(",\n") + "\n" + pad + "]";
+          }
+
+          if (isObject(val)) {
+            const keys = Object.keys(val);
+            if (!keys.length) return "{}";
+            return (
+              "{\n" +
+              keys
+                .map((k) => {
+                  return padIn + JSON.stringify(k) + ": " + render(val[k], level + 1);
+                })
+                .join(",\n") +
+              "\n" +
+              pad +
+              "}"
+            );
+          }
+
+          if (typeof val === "string" && /^__IDENT__:[A-Za-z_$][\w$]*$/.test(val)) {
+            return val.replace("__IDENT__:", "");
+          }
+
+          return JSON.stringify(val);
+        }
+
+        return render(x, 0);
+      }
+
+      function buildTemplateFields(obj) {
+        // caret-delimited key=value pairs; identifier tokens are rendered as-is (no quotes)
+        const keys = Object.keys(obj || {});
+        keys.sort((a, b) => a.localeCompare(b));
+
+        return keys
+          .map((k) => {
+            const v = obj[k];
+            if (typeof v === "string" && /^__IDENT__:[A-Za-z_$][\w$]*$/.test(v)) {
+              return k + "=" + v.replace("__IDENT__:", "");
+            }
+            if (typeof v === "object" && v !== null) {
+              return k + "=" + JSON.stringify(v);
+            }
+            return k + "=" + String(v);
+          })
+          .join("^");
+      }
+
+      // Editable state
+      window.__editableObject = {};
+
+      // Nested editor stack
+      window.__nestedStack = [];
+
+      function updateOutputs() {
+        const obj = window.__editableObject || {};
+        document.getElementById("pretty").textContent = stringifyJsObject(obj, 2);
+        document.getElementById("templateFieldsOut").textContent = buildTemplateFields(obj);
+      }
+
+      function renderKvTable(obj) {
+        const tbody = document.querySelector("#kvTable tbody");
+        tbody.innerHTML = "";
+
+        const keys = Object.keys(obj || {});
+        if (!keys.length) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 3;
+          td.style.color = "rgba(255,255,255,0.55)";
+          td.textContent = "(no keys found)";
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+          return;
+        }
+
+        keys.sort((a, b) => a.localeCompare(b));
+        for (const k of keys) {
+          const tr = document.createElement("tr");
+
+          const tdSel = document.createElement("td");
+          tdSel.style.width = "44px";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.className = "rowSelect";
+          cb.dataset.key = k;
+          tdSel.appendChild(cb);
+
+          const th = document.createElement("th");
+          const keyInp = document.createElement("input");
+          keyInp.className = "inline";
+          keyInp.value = k;
+          keyInp.dataset.key = k;
+          keyInp.addEventListener("change", onKeyEdit);
+          th.appendChild(keyInp);
+
+          const td = document.createElement("td");
+          const v = obj[k];
+          if (v && typeof v === "object") {
+            const wrap = document.createElement("div");
+            wrap.style.display = "flex";
+            wrap.style.gap = "8px";
+            wrap.style.alignItems = "center";
+
+            const preview = document.createElement("div");
+            preview.className = "small";
+            preview.style.flex = "1";
+            preview.style.minWidth = "0";
+            preview.textContent = Array.isArray(v) ? `Array(${v.length})` : "Object";
+
+            const openBtn = document.createElement("button");
+            openBtn.type = "button";
+            openBtn.className = "secondary";
+            openBtn.textContent = "Open";
+            openBtn.dataset.key = k;
+            openBtn.addEventListener("click", onOpenNested);
+
+            wrap.appendChild(preview);
+            wrap.appendChild(openBtn);
+            td.appendChild(wrap);
+          } else {
+            const inp = document.createElement("input");
+            inp.className = "inline";
+            inp.value = typeof v === "string" ? v : String(v);
+            inp.dataset.key = k;
+            inp.addEventListener("input", onValueEdit);
+            td.appendChild(inp);
+          }
+
+          tr.appendChild(tdSel);
+          tr.appendChild(th);
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        }
+      }
+
+      function onKeyEdit(e) {
+        const oldKey = e?.target?.dataset?.key;
+        if (!oldKey) return;
+        const newKey = String(e.target.value || "").trim();
+        if (!newKey) {
+          setStatus("bad", "Key cannot be blank.");
+          renderKvTable(window.__editableObject || {});
+          return;
+        }
+
+        const obj = window.__editableObject || {};
+        if (!Object.prototype.hasOwnProperty.call(obj, oldKey)) {
+          setStatus("bad", "Key not found: " + oldKey);
+          renderKvTable(obj);
+          return;
+        }
+        if (newKey !== oldKey && Object.prototype.hasOwnProperty.call(obj, newKey)) {
+          setStatus("bad", "Key already exists: " + newKey);
+          renderKvTable(obj);
+          return;
+        }
+
+        const val = obj[oldKey];
+        delete obj[oldKey];
+        obj[newKey] = val;
+        window.__editableObject = obj;
+        updateOutputs();
+        renderKvTable(obj);
+        setStatus("ok", "Renamed key: " + oldKey + " → " + newKey);
+      }
+
+      function onValueEdit(e) {
+        const key = e?.target?.dataset?.key;
+        if (!key) return;
+        const obj = window.__editableObject || {};
+        obj[key] = coerceValue(e.target.value);
+        window.__editableObject = obj;
+        updateOutputs();
+      }
+
+      function addField() {
+        const key = prompt("New field key (e.g. u_group_policy_id):");
+        if (!key) return;
+        const k = key.trim();
+        if (!k) return;
+        const obj = window.__editableObject || {};
+        if (Object.prototype.hasOwnProperty.call(obj, k)) {
+          setStatus("bad", "Key already exists: " + k);
+          return;
+        }
+        const value = prompt("Value (identifier like effectiveGroupPolicyId allowed):", "");
+        obj[k] = coerceValue(value);
+        window.__editableObject = obj;
+        updateOutputs();
+        renderKvTable(obj);
+        setStatus("ok", "Added field: " + k);
+      }
+
+      function deleteSelected() {
+        const obj = window.__editableObject || {};
+        const checks = Array.from(document.querySelectorAll("input.rowSelect:checked"));
+        if (!checks.length) {
+          setStatus("bad", "No rows selected.");
+          return;
+        }
+        checks.forEach((cb) => {
+          const k = cb.dataset.key;
+          if (k && Object.prototype.hasOwnProperty.call(obj, k)) delete obj[k];
+        });
+        window.__editableObject = obj;
+        updateOutputs();
+        renderKvTable(obj);
+        setStatus("ok", "Deleted " + checks.length + " field(s).");
+      }
+
+      // Nested editor
+      function currentNested() {
+        if (!window.__nestedStack.length) return null;
+        return window.__nestedStack[window.__nestedStack.length - 1];
+      }
+
+      function renderNested() {
+        const panel = document.getElementById("nestedEditor");
+        const tbody = document.querySelector("#nestedKvTable tbody");
+        const pathEl = document.getElementById("nestedPath");
+        tbody.innerHTML = "";
+
+        const cur = currentNested();
+        if (!cur) {
+          panel.style.display = "none";
+          return;
+        }
+
+        panel.style.display = "block";
+        pathEl.textContent = cur.path;
+
+        const container = cur.container;
+        const isArr = Array.isArray(container);
+        const keys = isArr ? container.map((_, i) => String(i)) : Object.keys(container || {});
+
+        if (!keys.length) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 3;
+          td.style.color = "rgba(255,255,255,0.55)";
+          td.textContent = "(no keys found)";
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+          return;
+        }
+
+        keys.sort((a, b) => a.localeCompare(b));
+        keys.forEach((k) => {
+          const tr = document.createElement("tr");
+
+          const tdSel = document.createElement("td");
+          tdSel.style.width = "44px";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.className = "nestedRowSelect";
+          cb.dataset.key = k;
+          tdSel.appendChild(cb);
+
+          const th = document.createElement("th");
+          const keyInp = document.createElement("input");
+          keyInp.className = "inline";
+          keyInp.value = k;
+          keyInp.dataset.key = k;
+          keyInp.disabled = isArr; // array index key not editable
+          keyInp.addEventListener("change", onNestedKeyEdit);
+          th.appendChild(keyInp);
+
+          const td = document.createElement("td");
+          const val = isArr ? container[Number(k)] : container[k];
+          if (val && typeof val === "object") {
+            const wrap = document.createElement("div");
+            wrap.style.display = "flex";
+            wrap.style.gap = "8px";
+            wrap.style.alignItems = "center";
+
+            const preview = document.createElement("div");
+            preview.className = "small";
+            preview.style.flex = "1";
+            preview.style.minWidth = "0";
+            preview.textContent = Array.isArray(val) ? `Array(${val.length})` : "Object";
+
+            const openBtn = document.createElement("button");
+            openBtn.type = "button";
+            openBtn.className = "secondary";
+            openBtn.textContent = "Open";
+            openBtn.dataset.key = k;
+            openBtn.addEventListener("click", () => openNestedAtKey(k));
+
+            wrap.appendChild(preview);
+            wrap.appendChild(openBtn);
+            td.appendChild(wrap);
+          } else {
+            const inp = document.createElement("input");
+            inp.className = "inline";
+            inp.value = typeof val === "string" ? val : String(val);
+            inp.dataset.key = k;
+            inp.addEventListener("input", onNestedValueEdit);
+            td.appendChild(inp);
+          }
+
+          tr.appendChild(tdSel);
+          tr.appendChild(th);
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        });
+      }
+
+      function openNestedAtKey(key) {
+        const cur = currentNested();
+        const container = cur ? cur.container : window.__editableObject;
+        const isArr = Array.isArray(container);
+        const val = isArr ? container[Number(key)] : container[key];
+        if (!val || typeof val !== "object") return;
+        const newPath = (cur ? cur.path : "root") + (isArr ? "[" + key + "]" : "." + key);
+        window.__nestedStack.push({ container: val, parent: container, key: key, isArr: isArr, path: newPath });
+        renderNested();
+      }
+
+      function onOpenNested(e) {
+        const key = e?.target?.dataset?.key;
+        if (!key) return;
+        // Seed stack at top-level
+        window.__nestedStack = [{ container: window.__editableObject, parent: null, key: null, isArr: false, path: "root" }];
+        openNestedAtKey(key);
+      }
+
+      function nestedBack() {
+        if (window.__nestedStack.length <= 1) {
+          window.__nestedStack = [];
+        } else {
+          window.__nestedStack.pop();
+        }
+        renderNested();
+      }
+
+      function nestedClose() {
+        window.__nestedStack = [];
+        renderNested();
+      }
+
+      function nestedApply() {
+        // edits are live
+        updateOutputs();
+        renderKvTable(window.__editableObject);
+        setStatus("ok", "Applied nested edits.");
+      }
+
+      function nestedAdd() {
+        const cur = currentNested();
+        if (!cur) return;
+        const container = cur.container;
+        if (Array.isArray(container)) {
+          const value = prompt("New array value:", "");
+          container.push(coerceValue(value));
+        } else {
+          const key = prompt("New field key:", "");
+          if (!key) return;
+          const k = key.trim();
+          if (!k) return;
+          if (Object.prototype.hasOwnProperty.call(container, k)) {
+            setStatus("bad", "Key already exists: " + k);
+            return;
+          }
+          const value = prompt("Value:", "");
+          container[k] = coerceValue(value);
+        }
+        renderNested();
+        nestedApply();
+      }
+
+      function nestedDeleteSelected() {
+        const cur = currentNested();
+        if (!cur) return;
+        const container = cur.container;
+        const checks = Array.from(document.querySelectorAll("input.nestedRowSelect:checked"));
+        if (!checks.length) {
+          setStatus("bad", "No rows selected.");
+          return;
+        }
+        if (Array.isArray(container)) {
+          // delete highest index first
+          const idxs = checks.map((cb) => Number(cb.dataset.key)).sort((a, b) => b - a);
+          idxs.forEach((i) => container.splice(i, 1));
+        } else {
+          checks.forEach((cb) => {
+            if (cb.dataset.key) delete container[cb.dataset.key];
+          });
+        }
+        renderNested();
+        nestedApply();
+      }
+
+      function onNestedKeyEdit(e) {
+        const cur = currentNested();
+        if (!cur || Array.isArray(cur.container)) return;
+        const oldKey = e?.target?.dataset?.key;
+        const newKey = String(e.target.value || "").trim();
+        if (!oldKey || !newKey) return;
+        if (newKey !== oldKey && Object.prototype.hasOwnProperty.call(cur.container, newKey)) {
+          setStatus("bad", "Key already exists: " + newKey);
+          renderNested();
+          return;
+        }
+        const val = cur.container[oldKey];
+        delete cur.container[oldKey];
+        cur.container[newKey] = val;
+        renderNested();
+        nestedApply();
+      }
+
+      function onNestedValueEdit(e) {
+        const cur = currentNested();
+        if (!cur) return;
+        const key = e?.target?.dataset?.key;
+        if (!key) return;
+        const container = cur.container;
+        if (Array.isArray(container)) container[Number(key)] = coerceValue(e.target.value);
+        else container[key] = coerceValue(e.target.value);
+        nestedApply();
+      }
+
+      function renderHistory() {
+        const el = document.getElementById("history");
+        if (!el) return;
+        const h = window.__history || [];
+        if (!h.length) {
+          el.textContent = "(no history yet)";
+          const info = document.getElementById("historyPageInfo");
+          if (info) info.textContent = "Page 0 of 0";
+          return;
+        }
+
+        const pageSize = Math.max(1, Number(window.__historyPageSize || 6));
+        const totalPages = Math.max(1, Math.ceil(h.length / pageSize));
+        window.__historyPageIndex = Math.max(0, Math.min(totalPages - 1, Number(window.__historyPageIndex || 0)));
+
+        const start = window.__historyPageIndex * pageSize;
+        const end = Math.min(h.length, start + pageSize);
+        const pageItems = h.slice(start, end);
+
+        const info = document.getElementById("historyPageInfo");
+        if (info) info.textContent = "Page " + (window.__historyPageIndex + 1) + " of " + totalPages;
+
+        const prevBtn = document.getElementById("historyPrevBtn");
+        const nextBtn = document.getElementById("historyNextBtn");
+        if (prevBtn) prevBtn.disabled = window.__historyPageIndex <= 0;
+        if (nextBtn) nextBtn.disabled = window.__historyPageIndex >= totalPages - 1;
+
+        const rows = pageItems
+          .map((it, localIdx) => {
+            const idx = start + localIdx;
+            const when = escapeHtml(it.at || "");
+            const preview = escapeHtml((it.pretty || "").slice(0, 180));
+            return `
+          <div style="display:flex; gap:10px; align-items:flex-start; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.10);">
+            <div style="flex: 0 0 auto; font-family: var(--mono); color: var(--muted);">${idx + 1}.</div>
+            <div style="flex: 1 1 auto; min-width: 0;">
+              <div class="small" style="margin-bottom: 6px;">${when}</div>
+              <div style="font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.75); word-break: break-word;">${preview}${(it.pretty || "").length > 180 ? "…" : ""}</div>
+              <div class="row" style="margin-top: 8px;">
+                <button class="secondary" data-h-action="load" data-h-index="${idx}">Load</button>
+                <button class="secondary" data-h-action="copy_obj" data-h-index="${idx}">Copy object</button>
+                <button class="secondary" data-h-action="copy_template" data-h-index="${idx}">Copy templateFields</button>
+                <button class="danger" data-h-action="delete" data-h-index="${idx}">Delete</button>
+              </div>
+            </div>
+          </div>`;
+          })
+          .join("");
+
+        el.innerHTML = rows;
+
+        el.querySelectorAll("button[data-h-action]").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const action = e.target.getAttribute("data-h-action");
+            const index = Number(e.target.getAttribute("data-h-index"));
+            const item = (window.__history || [])[index];
+            if (!item) return;
+
+            if (action === "load") {
+              document.getElementById("input").value = item.input || "";
+              try {
+                const parsed = parseJsObjectLiteral(item.input || "{}");
+                window.__editableObject = parsed.obj || {};
+                updateOutputs();
+                renderKvTable(window.__editableObject);
+                setStatus("ok", "Loaded history entry #" + (index + 1));
+              } catch (err) {
+                setStatus("bad", "Load failed: " + err.message);
+              }
+            } else if (action === "copy_obj") {
+              navigator.clipboard.writeText(item.pretty || "").then(
+                () => setStatus("ok", "Copied object from history."),
+                (err) => setStatus("bad", "Clipboard copy failed: " + (err && err.message ? err.message : String(err)))
+              );
+            } else if (action === "copy_template") {
+              navigator.clipboard.writeText(item.templateFields || "").then(
+                () => setStatus("ok", "Copied templateFields from history."),
+                (err) => setStatus("bad", "Clipboard copy failed: " + (err && err.message ? err.message : String(err)))
+              );
+            } else if (action === "delete") {
+              const h2 = window.__history || [];
+              h2.splice(index, 1);
+              window.__history = h2;
+              const pageSize = Math.max(1, Number(window.__historyPageSize || 6));
+              const totalPages = Math.max(1, Math.ceil(h2.length / pageSize));
+              window.__historyPageIndex = Math.max(0, Math.min(totalPages - 1, Number(window.__historyPageIndex || 0)));
+              saveHistory();
+              renderHistory();
+              setStatus("ok", "Deleted history entry #" + (index + 1) + ".");
+            }
+          });
+        });
+      }
+
+      function historyPrev() {
+        window.__historyPageIndex = Math.max(0, Number(window.__historyPageIndex || 0) - 1);
+        renderHistory();
+      }
+
+      function historyNext() {
+        window.__historyPageIndex = Number(window.__historyPageIndex || 0) + 1;
+        renderHistory();
+      }
+
+      function onHistoryPageSizeChange() {
+        const el = document.getElementById("historyPageSize");
+        const n = Number(el ? el.value : 6);
+        const size = isNaN(n) ? 6 : Math.max(1, Math.min(50, n));
+        window.__historyPageSize = size;
+        window.__historyPageIndex = 0;
+        saveHistory();
+        renderHistory();
+        setStatus("ok", "History page size set to " + size + ".");
+      }
+
+      function onHistoryLimitChange() {
+        const el = document.getElementById("historyLimit");
+        const n = Number(el ? el.value : 10);
+        const limit = isNaN(n) ? 10 : Math.max(0, Math.min(200, n));
+        window.__historyLimit = limit;
+        window.__history = (window.__history || []).slice(0, limit);
+        saveHistory();
+        renderHistory();
+        setStatus("ok", "History max saved set to " + limit + ".");
+      }
+
+      function clearHistory() {
+        window.__history = [];
+        saveHistory();
+        renderHistory();
+        setStatus("ok", "Cleared history.");
+      }
+
+      function purgeHistory() {
+        try {
+          localStorage.removeItem(HISTORY_KEY);
+          localStorage.removeItem(HISTORY_LIMIT_KEY);
+          localStorage.removeItem(HISTORY_PAGE_SIZE_KEY);
+        } catch (e) {}
+        window.__history = [];
+        window.__historyPageIndex = 0;
+        window.__historyPageSize = 6;
+        window.__historyLimit = 10;
+        document.getElementById("historyPageSize").value = String(window.__historyPageSize);
+        document.getElementById("historyLimit").value = String(window.__historyLimit);
+        saveHistory();
+        renderHistory();
+        setStatus("ok", "Purged history storage.");
+      }
+
+      function render() {
+        const input = document.getElementById("input").value;
+        const trimmed = (input || "").trim();
+        if (!trimmed) {
+          window.__editableObject = {};
+          updateOutputs();
+          renderKvTable(window.__editableObject);
+          setStatus("bad", "No input.");
+          return;
+        }
+
+        try {
+          const parsed = parseJsObjectLiteral(trimmed);
+          window.__editableObject = parsed.obj || {};
+          updateOutputs();
+          renderKvTable(window.__editableObject);
+
+          // history entry
+          window.__history = window.__history || [];
+          const entry = {
+            at: new Date().toISOString(),
+            input: trimmed,
+            pretty: stringifyJsObject(window.__editableObject, 2),
+            templateFields: buildTemplateFields(window.__editableObject),
+          };
+          const last = window.__history.length ? window.__history[0] : null;
+          if (!last || last.input !== entry.input) {
+            window.__history.unshift(entry);
+            const limit = Number(window.__historyLimit);
+            window.__history = window.__history.slice(0, isNaN(limit) ? 10 : limit);
+          }
+          saveHistory();
+          renderHistory();
+
+          setStatus("ok", "Rendered successfully.");
+        } catch (e) {
+          setStatus("bad", "Parse failed: " + e.message);
+        }
+      }
+
+      function copyText(id, okMsg) {
+        const text = document.getElementById(id)?.textContent || "";
+        if (!text) {
+          setStatus("bad", "Nothing to copy yet — click Render first.");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(
+          () => setStatus("ok", okMsg),
+          (err) => setStatus("bad", "Clipboard copy failed: " + (err && err.message ? err.message : String(err)))
+        );
+      }
+
+      function copyNormalizedFromState() {
+        const text = stringifyJsObject(window.__editableObject || {}, 2);
+        navigator.clipboard.writeText(text).then(
+          () => setStatus("ok", "Copied normalized JS object."),
+          (err) => setStatus("bad", "Clipboard copy failed: " + (err && err.message ? err.message : String(err)))
+        );
+      }
+
+      function copyTemplateFieldsFromState() {
+        const text = buildTemplateFields(window.__editableObject || {});
+        navigator.clipboard.writeText(text).then(
+          () => setStatus("ok", "Copied templateFields string."),
+          (err) => setStatus("bad", "Clipboard copy failed: " + (err && err.message ? err.message : String(err)))
+        );
+      }
+
+      function clearAll() {
+        document.getElementById("input").value = "";
+        window.__editableObject = {};
+        window.__nestedStack = [];
+        document.getElementById("nestedEditor").style.display = "none";
+        updateOutputs();
+        renderKvTable(window.__editableObject);
+        setStatus("ok", "Cleared.");
+      }
+
+      // Wire up
+      document.getElementById("renderBtn").addEventListener("click", render);
+      document.getElementById("copyPrettyBtn").addEventListener("click", () => copyText("pretty", "Copied normalized object."));
+      document.getElementById("copyTemplateBtn").addEventListener("click", () => copyText("templateFieldsOut", "Copied templateFields string."));
+      document.getElementById("copyNormalizedBtn").addEventListener("click", copyNormalizedFromState);
+      document.getElementById("copyTemplateFieldsBtn").addEventListener("click", copyTemplateFieldsFromState);
+      document.getElementById("copyEditedBtn").addEventListener("click", copyNormalizedFromState);
+      document.getElementById("addFieldBtn").addEventListener("click", addField);
+      document.getElementById("deleteSelectedBtn").addEventListener("click", deleteSelected);
+      document.getElementById("clearBtn").addEventListener("click", clearAll);
+
+      document.getElementById("nestedBackBtn").addEventListener("click", nestedBack);
+      document.getElementById("nestedCloseBtn").addEventListener("click", nestedClose);
+      document.getElementById("nestedApplyBtn").addEventListener("click", nestedApply);
+      document.getElementById("nestedAddBtn").addEventListener("click", nestedAdd);
+      document.getElementById("nestedDeleteBtn").addEventListener("click", nestedDeleteSelected);
+
+      document.getElementById("historyPrevBtn").addEventListener("click", historyPrev);
+      document.getElementById("historyNextBtn").addEventListener("click", historyNext);
+      document.getElementById("historyPageSize").addEventListener("change", onHistoryPageSizeChange);
+      document.getElementById("historyLimit").addEventListener("change", onHistoryLimitChange);
+      document.getElementById("clearHistoryBtn").addEventListener("click", clearHistory);
+      document.getElementById("purgeHistoryBtn").addEventListener("click", purgeHistory);
+
+      // Init from storage
+      window.__history = loadHistory();
+      window.__historyLimit = loadNum(HISTORY_LIMIT_KEY, 10, 0, 200);
+      window.__historyPageSize = loadNum(HISTORY_PAGE_SIZE_KEY, 6, 1, 50);
+      document.getElementById("historyLimit").value = String(window.__historyLimit);
+      document.getElementById("historyPageSize").value = String(window.__historyPageSize);
+      window.__history = window.__history.slice(0, window.__historyLimit);
+      saveHistory();
+      renderHistory();
+
+      // Seed example
+      document.getElementById("input").value = '{ u_group_policy_id: effectiveGroupPolicyId, u_account_id: v.accountId, flags: { allow_partial_search: true }, arr: [a, 1, "z" ] }';
+    </script>
+  </body>
+</html>
