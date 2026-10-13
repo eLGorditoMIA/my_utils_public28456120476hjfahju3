@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CONCAT / JSON Workbench</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-top">
+        <h1>CONCAT / JSON Workbench</h1>
+        <span id="appVersion" class="pill version-badge">v1</span>
+      </div>
+      <p>
+        Paste a ServiceNow <span class="pill">CONCAT("{...}")</span> expression, plain JSON, or even a JS object literal with bare identifiers (e.g. <span class="pill">{ id: "1", tags: [a, 1] }</span
+        >) and click <b>Render</b>. It normalizes the input into valid JSON, lets you filter/edit it as a key/value table, and regenerates a valid CONCAT expression.
+      </p>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="card-h">
+          <div>Input</div>
+          <div class="small">Tip: You can paste the full CONCAT expression as-is.</div>
+        </div>
+        <div class="card-b">
+          <textarea id="input" spellcheck="false"></textarea>
+          <div class="row">
+            <button id="renderBtn">Render</button>
+            <button id="copyTemplateBtn" class="secondary">Copy extracted JSON template</button>
+            <button id="settingsBtn" class="secondary">Settings</button>
+            <button id="howtoBtn" class="secondary">How to use</button>
+            <button id="changelogBtn" class="secondary">What's new</button>
+            <button id="clearBtn" class="danger">Clear</button>
+          </div>
+
+          <div id="howtoPanel" class="card" style="display: none; margin-top: 12px; border-radius: 12px">
+            <div class="card-h">
+              <div>How to use each section</div>
+              <div class="row" style="margin: 0; gap: 8px">
+                <button id="howtoCloseBtn" class="danger">Close</button>
+              </div>
+            </div>
+            <div class="card-b" style="background: rgba(17, 26, 51, 0.35)">
+              <pre id="howtoContent" style="white-space: pre-wrap; word-break: break-word; max-height: 420px; overflow-y: auto">Loading…</pre>
+            </div>
+          </div>
+
+          <div id="changelogPanel" class="card" style="display: none; margin-top: 12px; border-radius: 12px">
+            <div class="card-h">
+              <div>What's new</div>
+              <div class="row" style="margin: 0; gap: 8px">
+                <button id="changelogCloseBtn" class="danger">Close</button>
+              </div>
+            </div>
+            <div class="card-b" style="background: rgba(17, 26, 51, 0.35)">
+              <pre id="changelogContent" style="white-space: pre-wrap; word-break: break-word; max-height: 420px; overflow-y: auto">Loading…</pre>
+            </div>
+          </div>
+
+          <div id="settingsPanel" class="card" style="display: none; margin-top: 12px; border-radius: 12px">
+            <div class="card-h">
+              <div>Settings</div>
+              <div class="row" style="margin: 0; gap: 8px">
+                <button id="settingsCloseBtn" class="danger">Close</button>
+              </div>
+            </div>
+            <div class="card-b" style="background: rgba(17, 26, 51, 0.35)">
+              <div style="margin-bottom: 14px">
+                <div style="font-size: 12px; color: var(--text); margin-bottom: 6px">History settings</div>
+                <div class="small" style="margin-bottom: 10px">Controls how many history entries show per page and how many are retained.</div>
+
+                <div class="row" style="margin-top: 0">
+                  <label class="small" style="display: flex; align-items: center; gap: 8px">
+                    Page size
+                    <input
+                      id="historyPageSize"
+                      type="number"
+                      min="1"
+                      max="50"
+                      value="6"
+                      style="
+                        width: 72px;
+                        padding: 6px 8px;
+                        border-radius: 10px;
+                        border: 1px solid rgba(255, 255, 255, 0.16);
+                        background: rgba(15, 23, 48, 0.65);
+                        color: var(--text);
+                        font-family: var(--mono);
+                        font-size: 12px;
+                      "
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 14px">
+                <div style="font-size: 12px; color: var(--text); margin-bottom: 6px">Editor settings</div>
+                <div class="small">(placeholder for future)</div>
+              </div>
+
+              <div>
+                <div style="font-size: 12px; color: var(--text); margin-bottom: 6px">Output settings</div>
+                <div class="small">(placeholder for future)</div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div id="status" class="status">Waiting for input…</div>
+          </div>
+
+          <div class="row" style="margin-top: 10px; align-items: flex-start">
+            <div style="width: 100%">
+              <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                <span>History</span>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+                  <button id="historyPrevBtn" class="secondary">← Prev</button>
+                  <div id="historyPageInfo" class="small" style="min-width: 140px; text-align: center">Page 1 of 1</div>
+                  <button id="historyNextBtn" class="secondary">Next →</button>
+
+                  <label class="small" style="display: flex; align-items: center; gap: 8px">
+                    Max saved
+                    <input
+                      id="historyLimit"
+                      type="number"
+                      min="0"
+                      max="200"
+                      value="10"
+                      style="
+                        width: 84px;
+                        padding: 6px 8px;
+                        border-radius: 10px;
+                        border: 1px solid rgba(255, 255, 255, 0.16);
+                        background: rgba(15, 23, 48, 0.65);
+                        color: var(--text);
+                        font-family: var(--mono);
+                        font-size: 12px;
+                      "
+                    />
+                  </label>
+
+                  <button id="clearHistoryBtn" class="danger">Clear history</button>
+                  <button id="purgeHistoryBtn" class="danger">Purge storage</button>
+                </div>
+              </div>
+              <div id="history" class="historyBox" style="overflow-x: hidden; white-space: normal">(no history yet)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-h">
+          <div>Readable output</div>
+          <div class="small">This is the JSON <i>template</i>. It will keep tokens like <span class="pill">@state.foo</span> intact.</div>
+        </div>
+        <div class="card-b">
+          <div class="grid2">
+            <div>
+              <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                <span>Pretty JSON</span>
+                <button id="copyPrettyBtn" class="secondary">Copy pretty JSON</button>
+              </div>
+              <input id="jsonFilter" type="text" placeholder="Filter JSON..." style="width: 100%; margin-bottom: 8px; padding: 8px 10px; border-radius: 10px" />
+              <pre id="pretty">(rendered JSON will appear here)</pre>
+
+              <div style="margin-top: 10px">
+                <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                  <span>Generated CONCAT</span>
+                  <span style="display: flex; gap: 8px">
+                    <button id="toggleConcatBtn" class="secondary">Show</button>
+                    <button id="copyConcatBtn" class="secondary">Copy CONCAT</button>
+                  </span>
+                </div>
+                <div id="concatBody" style="display: none">
+                  <pre id="concatOut" style="white-space: pre-wrap; word-break: break-word">(generated CONCAT will appear here)</pre>
+                  <div class="small" style="margin-top: 6px">
+                    Tokens <span class="pill">{{...}}</span> are treated as <b>string tokens</b> by default (quoted), matching the original working pattern. Use <span class="pill">{{{...}}}</span> only
+                    when you want a <b>raw token</b> (unquoted, for booleans/numbers). Example: <span class="pill">{{@state.name}}</span> (string) vs
+                    <span class="pill">{{{@state.flag_a}}}</span> (raw).
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="small" style="margin: 0 0 6px 0">Key / Value</div>
+
+              <div class="row" style="margin-top: 0; margin-bottom: 8px">
+                <button id="addFieldBtn" class="secondary">Add field</button>
+                <button id="deleteSelectedBtn" class="danger">Delete selected</button>
+                <button id="copyEditedJsonBtn" class="secondary">Copy edited JSON</button>
+              </div>
+
+              <div class="row" style="margin-top: 0">
+                <label class="small" style="display: flex; align-items: center; gap: 8px">
+                  <input id="editModeToggle" type="checkbox" checked />
+                  Enable editing
+                </label>
+              </div>
+
+              <div id="addInline" style="margin: 8px 0 10px 0; padding: 10px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(15, 23, 48, 0.55)">
+                <div class="small" style="margin-bottom: 8px">Add a field</div>
+                <div class="row" style="margin-top: 0">
+                  <input
+                    id="newKey"
+                    type="text"
+                    placeholder="key (e.g. customer_id)"
+                    style="
+                      flex: 1;
+                      min-width: 220px;
+                      padding: 8px 10px;
+                      border-radius: 10px;
+                      border: 1px solid rgba(255, 255, 255, 0.16);
+                      background: rgba(15, 23, 48, 0.65);
+                      color: var(--text);
+                      font-family: var(--mono);
+                      font-size: 12px;
+                    "
+                  />
+                  <input
+                    id="newValue"
+                    type="text"
+                    placeholder="value (true/false, number, JSON, or text)"
+                    style="
+                      flex: 2;
+                      min-width: 280px;
+                      padding: 8px 10px;
+                      border-radius: 10px;
+                      border: 1px solid rgba(255, 255, 255, 0.16);
+                      background: rgba(15, 23, 48, 0.65);
+                      color: var(--text);
+                      font-family: var(--mono);
+                      font-size: 12px;
+                    "
+                  />
+                  <button id="addInlineBtn" class="secondary">Add</button>
+                </div>
+                <div class="small" style="margin-top: 8px">Tip: Use <span class="pill">{{@state.foo}}</span> if you want to represent a token.</div>
+              </div>
+
+              <table class="kv" id="kvTable">
+                <thead>
+                  <tr>
+                    <th style="width: 44px">sel</th>
+                    <th>key</th>
+                    <th>value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="3" style="color: rgba(255, 255, 255, 0.55)">(rendered table will appear here)</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div id="nestedEditor" style="display: none; margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(17, 26, 51, 0.55)">
+                <div class="small" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px">
+                  <div>
+                    <div style="font-size: 12px; color: var(--text)">Nested editor</div>
+                    <div id="nestedPath" class="small" style="margin-top: 4px">root</div>
+                  </div>
+                  <div class="row" style="margin: 0; gap: 8px">
+                    <button id="nestedBackBtn" class="secondary">Back</button>
+                    <button id="nestedCloseBtn" class="danger">Close</button>
+                  </div>
+                </div>
+                <table class="kv" id="nestedKvTable">
+                  <thead>
+                    <tr>
+                      <th style="width: 44px">sel</th>
+                      <th>key</th>
+                      <th>value</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+                <div class="row">
+                  <button id="nestedAddBtn" class="secondary">Add field</button>
+                  <button id="nestedDeleteBtn" class="danger">Delete selected</button>
+                  <button id="nestedApplyBtn">Apply to parent</button>
+                </div>
+                <div class="small" style="margin-top: 8px">Tip: Objects/arrays in nested view can be opened too (drill down).</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
