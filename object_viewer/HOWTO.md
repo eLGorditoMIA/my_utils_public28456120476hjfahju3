@@ -83,6 +83,12 @@ in the table; `Add field` appends a new row; check the `sel` boxes and
 (e.g. `{"a":1}` or `[1,2]`) becomes a nested object/array, anything else stays
 a string. Uncheck `Enable editing` to view the table read-only.
 
+## How to use / What's new panels
+
+Both panels have a **Search** box in their header. Type into it to narrow the
+panel down to just the matching lines (highlighted), the same way the Pretty
+JSON filter works. Clear the box to see the full document again.
+
 ## Nested editor
 
 Click an object/array value in the table to drill into it — the nested editor

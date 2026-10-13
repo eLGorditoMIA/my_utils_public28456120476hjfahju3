@@ -10,7 +10,7 @@
     <header>
       <div class="header-top">
         <h1>CONCAT / JSON Workbench</h1>
-        <span id="appVersion" class="pill version-badge">v1.1</span>
+        <span id="appVersion" class="pill version-badge">v1.2</span>
       </div>
       <p>
         Paste a ServiceNow <span class="pill">CONCAT("{...}")</span> expression, plain JSON, or even a JS object literal with bare identifiers (e.g. <span class="pill">{ id: "1", tags: [a, 1] }</span
@@ -39,6 +39,7 @@
             <div class="card-h">
               <div>How to use each section</div>
               <div class="row" style="margin: 0; gap: 8px">
+                <input id="howtoSearch" type="text" placeholder="Search..." style="width: 160px; padding: 8px 10px; border-radius: 10px" />
                 <button id="howtoCloseBtn" class="danger">Close</button>
               </div>
             </div>
@@ -51,6 +52,7 @@
             <div class="card-h">
               <div>What's new</div>
               <div class="row" style="margin: 0; gap: 8px">
+                <input id="changelogSearch" type="text" placeholder="Search..." style="width: 160px; padding: 8px 10px; border-radius: 10px" />
                 <button id="changelogCloseBtn" class="danger">Close</button>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { setStatus } from "./dom.js";
+import { setStatus, escapeHtml, highlightMatches } from "./dom.js";
 import { extractJsonTemplate, parseJsonTemplate } from "./templateParser.js";
 import { generateConcatFromTemplate } from "./concatBuilder.js";
 import { applyJsonFilter } from "./derived.js";
@@ -37,8 +37,30 @@ function closeSettings() {
   if (p) p.style.display = "none";
 }
 
-function makeFetchedDocPanel(panelId, contentId, fileName) {
+function makeFetchedDocPanel(panelId, contentId, fileName, searchId) {
   let loaded = false;
+  let rawText = "";
+
+  function render() {
+    const contentEl = document.getElementById(contentId);
+    const searchEl = document.getElementById(searchId);
+    const filter = searchEl ? searchEl.value.trim() : "";
+    if (!filter) {
+      contentEl.innerHTML = escapeHtml(rawText);
+      return;
+    }
+    const lower = filter.toLowerCase();
+    const matchingLines = rawText.split("\n").filter((line) => line.toLowerCase().includes(lower));
+    if (!matchingLines.length) {
+      contentEl.textContent = "No matches.";
+      return;
+    }
+    contentEl.innerHTML = highlightMatches(matchingLines.join("\n"), filter);
+  }
+
+  const searchEl = document.getElementById(searchId);
+  if (searchEl) searchEl.addEventListener("input", render);
+
   return {
     open() {
       const p = document.getElementById(panelId);
@@ -51,7 +73,8 @@ function makeFetchedDocPanel(panelId, contentId, fileName) {
           return res.text();
         })
         .then((text) => {
-          document.getElementById(contentId).textContent = text;
+          rawText = text;
+          render();
         })
         .catch((err) => {
           loaded = false;
@@ -65,8 +88,8 @@ function makeFetchedDocPanel(panelId, contentId, fileName) {
   };
 }
 
-const howtoPanel = makeFetchedDocPanel("howtoPanel", "howtoContent", "HOWTO.md");
-const changelogPanel = makeFetchedDocPanel("changelogPanel", "changelogContent", "CHANGELOG.md");
+const howtoPanel = makeFetchedDocPanel("howtoPanel", "howtoContent", "HOWTO.md", "howtoSearch");
+const changelogPanel = makeFetchedDocPanel("changelogPanel", "changelogContent", "CHANGELOG.md", "changelogSearch");
 
 function render() {
   const input = document.getElementById("input").value;

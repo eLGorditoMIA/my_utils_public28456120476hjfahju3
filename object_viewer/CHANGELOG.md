@@ -3,6 +3,16 @@
 All notable changes to this project are documented here, newest first.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-10-12 (5)
+
+### Added
+- Search boxes in the "How to use" and "What's new" panels: typing filters
+  the doc down to matching lines (highlighted), matching the existing
+  Pretty JSON filter behavior. Clearing the search restores the full text.
+
+### Changed
+- Bumped version badge to `v1.2`.
+
 ## 2026-10-12 (4)
 
 ### Changed
