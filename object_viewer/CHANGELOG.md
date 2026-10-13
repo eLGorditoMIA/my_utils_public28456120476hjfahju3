@@ -3,6 +3,11 @@
 All notable changes to this project are documented here, newest first.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-10-12 (4)
+
+### Changed
+- Bumped version badge to `v1.1`.
+
 ## 2026-10-12 (3)
 
 ### Added
