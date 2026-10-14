@@ -37,10 +37,24 @@ header h1 {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .version-badge {
   flex: none;
+}
+
+.icon-btn {
+  padding: 4px 9px;
+  font-size: 11px;
 }
 
 header p {
@@ -76,6 +90,10 @@ main {
 
   button {
     width: 100%;
+  }
+
+  .header-top button {
+    width: auto;
   }
 
   textarea {
