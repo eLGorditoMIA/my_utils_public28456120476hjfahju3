@@ -25,8 +25,13 @@ Paste one of these, then click **Render**:
   ```
   parses the same as `{ firstName: {{@state.test}}, lastName: plain }` — `plain`
   becomes the string `"plain"`, while `@state.test` becomes an unquoted script
-  variable in Generated CONCAT. Every field still needs a value — `lastName: ,`
-  with nothing between the colon and comma won't parse.
+  variable in Generated CONCAT. A field left empty (nothing between `:` and the
+  next `,`/`}`) becomes an empty string instead of failing to parse:
+  ```
+  { firstName: @state.test, lastName: , dateOfBirth: , memberId: , apiIdentifier: }
+  ```
+  is handy for loading a mostly-blank template into the editor so you can fill
+  in the remaining fields by hand afterward.
 - A top-level JSON **array** of objects:
   ```
   [{"id":"1","name":"Alice"},{"id":"2","name":"Bob"}]

@@ -28,6 +28,12 @@ export function parseJsObjectLiteral(src) {
   // This is best-effort and assumes keys are simple identifiers.
   s = s.replace(/([,{]\s*)([A-Za-z_$][\w$]*)(\s*):/g, '$1"$2"$3:');
 
+  // Treat an empty value (nothing between ':' and the next ',' or '}') as an
+  // empty string, so a template like `{ firstName: @state.test, lastName: }`
+  // can be used to seed blank fields for later editing instead of failing to
+  // parse.
+  s = s.replace(/:(\s*)(?=[,}])/g, ': ""');
+
   // Replace RHS identifiers that are not true/false/null and not numbers with string tokens.
   // We only do this in value positions after ':' or after '[' or after ',' within arrays.
   // A bare "@state.x"-style identifier (ServiceNow token syntax, optionally dotted) is

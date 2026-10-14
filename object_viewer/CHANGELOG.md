@@ -3,6 +3,14 @@
 All notable changes to this project are documented here, newest first.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-10-13 (2)
+
+### Added
+- Empty values in the bare-identifier fallback parser: `{ firstName: @state.test, lastName: , id: }`
+  now parses instead of failing, with empty fields (nothing between `:` and the
+  next `,`/`}`) becoming `""`. Useful for seeding a mostly-blank template object
+  into the editor and filling in the rest of the fields afterward.
+
 ## 2026-10-13
 
 ### Added
