@@ -17,6 +17,16 @@ Paste one of these, then click **Render**:
   ```
   { id: "123", tags: [a, 1, "z"], meta: { nested: { deep: deepVal } } }
   ```
+  A bare `@state.x`-style value (optionally dotted, e.g. `@state.member.id`) is
+  treated specially: it's normalized into a `{{@state.x}}` token instead of a
+  plain string, so you don't need to type the `{{...}}` wrapper yourself:
+  ```
+  { firstName: @state.test, lastName: plain }
+  ```
+  parses the same as `{ firstName: {{@state.test}}, lastName: plain }` — `plain`
+  becomes the string `"plain"`, while `@state.test` becomes an unquoted script
+  variable in Generated CONCAT. Every field still needs a value — `lastName: ,`
+  with nothing between the colon and comma won't parse.
 - A top-level JSON **array** of objects:
   ```
   [{"id":"1","name":"Alice"},{"id":"2","name":"Bob"}]

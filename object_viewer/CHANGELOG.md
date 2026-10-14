@@ -3,6 +3,17 @@
 All notable changes to this project are documented here, newest first.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-10-13
+
+### Added
+- Bare `@state.x`-style tokens (ServiceNow state variables, optionally
+  dotted) now work without the `{{...}}` wrapper in CONCAT/JSON mode's
+  bare-identifier fallback. For example `{firstName: @state.test}` now
+  parses the same as `{firstName: {{@state.test}}}`, and Generated CONCAT
+  emits `@state.test` as an unquoted script variable. Plain (non-`@`)
+  bare identifiers are unaffected — they still normalize to plain string
+  values.
+
 ## 2026-10-12 (4)
 
 ### Added

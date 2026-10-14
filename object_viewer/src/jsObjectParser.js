@@ -30,9 +30,12 @@ export function parseJsObjectLiteral(src) {
 
   // Replace RHS identifiers that are not true/false/null and not numbers with string tokens.
   // We only do this in value positions after ':' or after '[' or after ',' within arrays.
-  // Best-effort: this won't handle every JS expression.
-  s = s.replace(/(:\s*|\[\s*|,\s*)([A-Za-z_$][\w$]*)(\s*)(?=[,}\]])/g, function (m, p1, ident, p3) {
+  // A bare "@state.x"-style identifier (ServiceNow token syntax, optionally dotted) is
+  // normalized straight into a "{{@state.x}}" token, same as if the user had typed the
+  // double-brace form directly. Best-effort: this won't handle every JS expression.
+  s = s.replace(/(:\s*|\[\s*|,\s*)(@?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)(\s*)(?=[,}\]])/g, function (m, p1, ident, p3) {
     if (ident === "true" || ident === "false" || ident === "null") return m;
+    if (ident.startsWith("@")) return p1 + JSON.stringify("{{" + ident + "}}") + p3;
     return p1 + '"__IDENT__:' + ident + '"' + p3;
   });
 
