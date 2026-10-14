@@ -10,7 +10,7 @@
     <header>
       <div class="header-top">
         <h1>CONCAT / JSON Workbench</h1>
-        <span id="appVersion" class="pill version-badge">v1.4</span>
+        <span id="appVersion" class="pill version-badge">v1.5</span>
       </div>
       <p>
         Paste a ServiceNow <span class="pill">CONCAT("{...}")</span> expression, plain JSON, or even a JS object literal with bare identifiers (e.g. <span class="pill">{ id: "1", tags: [a, 1] }</span
@@ -19,6 +19,19 @@
     </header>
 
     <main>
+      <section class="card">
+        <div class="card-h">
+          <div>Create a new object</div>
+          <div class="small">Start from scratch instead of pasting input — build fields in the Key/Value table below.</div>
+        </div>
+        <div class="card-b">
+          <div class="row">
+            <button id="newObjectBtn">New object {}</button>
+            <button id="newArrayBtn" class="secondary">New array []</button>
+          </div>
+        </div>
+      </section>
+
       <section class="card">
         <div class="card-h">
           <div>Input</div>

@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { setStatus, escapeHtml, highlightMatches } from "./dom.js";
 import { extractJsonTemplate, parseJsonTemplate } from "./templateParser.js";
 import { generateConcatFromTemplate } from "./concatBuilder.js";
-import { applyJsonFilter } from "./derived.js";
+import { applyJsonFilter, updateDerivedOutputs } from "./derived.js";
 import { saveHistory, loadHistory, loadHistoryLimit, loadHistoryPageSize } from "./historyStore.js";
 import {
   renderHistory,
@@ -25,6 +25,7 @@ import {
   nestedApply,
   nestedAdd,
   nestedDeleteSelected,
+  hideNestedEditor,
 } from "./table.js";
 
 function openSettings() {
@@ -212,6 +213,20 @@ function copyGeneratedConcat() {
   );
 }
 
+function startNew(isArray) {
+  hideNestedEditor();
+  document.getElementById("input").value = "";
+  state.lastTemplate = "";
+  state.editableObject = isArray ? [] : {};
+
+  renderKvTable(state.editableObject);
+  updateDerivedOutputs();
+
+  setStatus("ok", isArray ? "Started a new empty array. Use Add field below to push items." : "Started a new empty object. Use Add field below to add keys.");
+
+  document.getElementById("newKey")?.focus();
+}
+
 function clearAll() {
   document.getElementById("input").value = "";
   document.getElementById("pretty").textContent = "(rendered JSON will appear here)";
@@ -225,6 +240,8 @@ function clearAll() {
 
 // Wire up
 document.getElementById("renderBtn").addEventListener("click", render);
+document.getElementById("newObjectBtn").addEventListener("click", () => startNew(false));
+document.getElementById("newArrayBtn").addEventListener("click", () => startNew(true));
 document.getElementById("copyTemplateBtn").addEventListener("click", copyExtractedTemplate);
 document.getElementById("settingsBtn").addEventListener("click", openSettings);
 document.getElementById("settingsCloseBtn").addEventListener("click", closeSettings);

@@ -1,5 +1,14 @@
 # How to use each section
 
+## Create a new object
+
+Click **New object {}** or **New array []** to start from a blank object/array
+instead of pasting CONCAT/JSON into Input. This clears the Input box and resets
+the Key/Value table to empty — use `Add field` (or the nested editor's
+`Add field`, once you've added a nested object/array) to build it up field by
+field. Handy for building a brand-new payload from scratch rather than editing
+an existing one.
+
 ## Input
 
 Paste one of these, then click **Render**:

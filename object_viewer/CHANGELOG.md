@@ -3,6 +3,14 @@
 All notable changes to this project are documented here, newest first.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-10-13 (3)
+
+### Added
+- A new "Create a new object" card above Input, with `New object {}` and
+  `New array []` buttons. Lets you build an object/array from scratch using
+  the existing Add field / Key-Value table / nested editor, without needing
+  to paste any CONCAT/JSON text first.
+
 ## 2026-10-13 (2)
 
 ### Added
