@@ -1,4 +1,5 @@
 import { parseJsObjectLiteral } from "./jsObjectParser.js";
+import { wrapBareTokens } from "./concatBuilder.js";
 
 /**
  * Extract a JSON-like template from a ServiceNow CONCAT expression.
@@ -120,16 +121,16 @@ function stripIdentTokens(x) {
 export function parseJsonTemplate(jsonText) {
   // First attempt: direct parse
   try {
-    return { parsed: JSON.parse(jsonText), parseMode: "direct" };
+    return { parsed: wrapBareTokens(JSON.parse(jsonText)), parseMode: "direct" };
   } catch (e1) {
     // Replace {{...}} tokens with placeholder strings
     const tokenReplaced = jsonText.replace(/\{\{[^}]+\}\}/g, '"__TEMPLATE_TOKEN__"');
     try {
-      return { parsed: JSON.parse(tokenReplaced), parseMode: "token_replaced" };
+      return { parsed: wrapBareTokens(JSON.parse(tokenReplaced)), parseMode: "token_replaced" };
     } catch (e2) {
       try {
         const { obj } = parseJsObjectLiteral(tokenReplaced);
-        return { parsed: stripIdentTokens(obj), parseMode: "js_literal_coerced" };
+        return { parsed: wrapBareTokens(stripIdentTokens(obj)), parseMode: "js_literal_coerced" };
       } catch (e3) {
         throw e1;
       }

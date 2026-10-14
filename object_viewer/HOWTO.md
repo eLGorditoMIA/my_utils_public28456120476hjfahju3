@@ -27,14 +27,22 @@ Paste one of these, then click **Render**:
   { id: "123", tags: [a, 1, "z"], meta: { nested: { deep: deepVal } } }
   ```
   A bare `@state.x`-style value (optionally dotted, e.g. `@state.member.id`) is
-  treated specially: it's normalized into a `{{@state.x}}` token instead of a
-  plain string, so you don't need to type the `{{...}}` wrapper yourself:
+  treated specially: it's recognized as a script variable token instead of a
+  plain string, so you don't need to type the `{{...}}` wrapper yourself — and
+  Pretty JSON / the Key/Value table show it back to you exactly as typed, bare,
+  with no `{{...}}` wrapper:
   ```
   { firstName: @state.test, lastName: plain }
   ```
   parses the same as `{ firstName: {{@state.test}}, lastName: plain }` — `plain`
   becomes the string `"plain"`, while `@state.test` becomes an unquoted script
-  variable in Generated CONCAT. A field left empty (nothing between `:` and the
+  variable in Generated CONCAT. This works no matter how the token gets in —
+  typed bare, typed with `{{...}}`, pasted as quoted plain JSON
+  (`{"firstName":"@state.test"}`), or edited directly in the Key/Value table.
+  The `{{...}}`/`{{{...}}}` wrapper is still stored under the hood (that's how
+  Generated CONCAT and `Copy edited JSON` know it's a token, not a literal
+  string) — it's just hidden from the Pretty JSON / table display for
+  readability. A field left empty (nothing between `:` and the
   next `,`/`}`) becomes an empty string instead of failing to parse:
   ```
   { firstName: @state.test, lastName: , dateOfBirth: , memberId: , apiIdentifier: }
@@ -89,6 +97,17 @@ Filtering for `allow_retry` shows:
 }
 ```
 with `allow_retry` highlighted. Clear the filter to see the full object again.
+
+## Pretty Object (no quotes)
+
+A second view of the same data as Pretty JSON, but with **zero quote
+characters anywhere** — keys, string values, and tokens are all shown bare,
+the way you'd type a plain JS object literal (e.g. `{ firstName: @state.test,
+lastName: plain }` instead of `{"firstName":"@state.test","lastName":"plain"}`).
+Collapsed by default — click `Show` to expand it, `Copy pretty object` to copy
+its text. Uses the same filter box as Pretty JSON, so narrowing/highlighting
+behaves identically between the two panels. This is a display-only view: the
+underlying value, Generated CONCAT, and `Copy edited JSON` are unaffected.
 
 ## Generated CONCAT
 

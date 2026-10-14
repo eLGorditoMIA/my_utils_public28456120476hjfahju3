@@ -3,6 +3,33 @@
 All notable changes to this project are documented here, newest first.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-10-13 (6)
+
+### Added
+- A new "Pretty Object (no quotes)" panel, below Pretty JSON. Shows the same
+  data with zero quote characters anywhere — not around keys, not around
+  string values, not around tokens — exactly as you'd type it as a bare JS
+  object literal. Distinct from Pretty JSON, which still shows standard JSON
+  syntax with quotes. Collapsed by default; `Show`/`Hide` toggles it, `Copy
+  pretty object` copies its text. Respects the same filter box as Pretty JSON
+  (narrows to matching branches, with the match highlighted).
+
+## 2026-10-13 (5)
+
+### Changed
+- `@state.x`-style tokens now display without their `{{...}}` wrapper in
+  Pretty JSON and the Key/Value table (e.g. `@state.test` instead of
+  `{{@state.test}}`) — shows the data the way you typed it. The underlying
+  value, Generated CONCAT, and `Copy edited JSON` are unaffected: internally
+  it's still stored and treated as a script variable token.
+- Plain JSON with a quoted `@state.x` value (no braces at all, e.g. pasting
+  back a copy of the Pretty JSON display) is now also recognized as a token,
+  not a literal string — closes the round-trip gap this would've otherwise
+  created.
+- Editing a value in the Key/Value table to a bare `@state.x` now always
+  normalizes it into a token, consistent regardless of entry point (Add
+  field, table edit, nested editor).
+
 ## 2026-10-13 (4)
 
 ### Changed

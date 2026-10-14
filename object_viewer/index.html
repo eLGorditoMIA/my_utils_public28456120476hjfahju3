@@ -14,7 +14,7 @@
           <button id="newObjectBtn" class="secondary icon-btn" title="Start a new empty object {}">+ {}</button>
           <button id="newArrayBtn" class="secondary icon-btn" title="Start a new empty array []">+ []</button>
         </div>
-        <span id="appVersion" class="pill version-badge">v1.6</span>
+        <span id="appVersion" class="pill version-badge">v1.8</span>
       </div>
       <p>
         Paste a ServiceNow <span class="pill">CONCAT("{...}")</span> expression, plain JSON, or even a JS object literal with bare identifiers (e.g. <span class="pill">{ id: "1", tags: [a, 1] }</span
@@ -170,6 +170,20 @@
               </div>
               <input id="jsonFilter" type="text" placeholder="Filter JSON..." style="width: 100%; margin-bottom: 8px; padding: 8px 10px; border-radius: 10px" />
               <pre id="pretty">(rendered JSON will appear here)</pre>
+
+              <div style="margin-top: 10px">
+                <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                  <span>Pretty Object (no quotes)</span>
+                  <span style="display: flex; gap: 8px">
+                    <button id="toggleObjectBtn" class="secondary">Show</button>
+                    <button id="copyObjectBtn" class="secondary">Copy pretty object</button>
+                  </span>
+                </div>
+                <div id="objectBody" style="display: none">
+                  <pre id="objectOut">(pretty object will appear here)</pre>
+                  <div class="small" style="margin-top: 6px">Same data as Pretty JSON, shown exactly as typed — no quotes around keys, strings, or tokens.</div>
+                </div>
+              </div>
 
               <div style="margin-top: 10px">
                 <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">

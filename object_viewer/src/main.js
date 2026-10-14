@@ -201,6 +201,18 @@ function copyPrettyJson() {
   );
 }
 
+function copyPrettyObject() {
+  const text = document.getElementById("objectOut")?.textContent || "";
+  if (!text || text.includes("(pretty object will appear here)")) {
+    setStatus("bad", "Nothing to copy yet — click Render first.");
+    return;
+  }
+  navigator.clipboard.writeText(text).then(
+    () => setStatus("ok", "Copied pretty object to clipboard."),
+    (err) => setStatus("bad", "Clipboard copy failed: " + (err && err.message ? err.message : String(err)))
+  );
+}
+
 function copyGeneratedConcat() {
   const t = state.generatedConcat || "";
   if (!t) {
@@ -257,6 +269,14 @@ document.getElementById("copyConcatBtn").addEventListener("click", copyGenerated
 document.getElementById("toggleConcatBtn").addEventListener("click", () => {
   const body = document.getElementById("concatBody");
   const btn = document.getElementById("toggleConcatBtn");
+  const collapsed = body.style.display === "none";
+  body.style.display = collapsed ? "block" : "none";
+  btn.textContent = collapsed ? "Hide" : "Show";
+});
+document.getElementById("copyObjectBtn").addEventListener("click", copyPrettyObject);
+document.getElementById("toggleObjectBtn").addEventListener("click", () => {
+  const body = document.getElementById("objectBody");
+  const btn = document.getElementById("toggleObjectBtn");
   const collapsed = body.style.display === "none";
   body.style.display = collapsed ? "block" : "none";
   btn.textContent = collapsed ? "Hide" : "Show";

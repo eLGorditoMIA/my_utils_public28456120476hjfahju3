@@ -1,6 +1,6 @@
 import { state } from "./state.js";
 import { setStatus } from "./dom.js";
-import { coerceValue } from "./concatBuilder.js";
+import { coerceValue, stripTokenBraces } from "./concatBuilder.js";
 import { isObjectLike, formatPath, getAtPath, renameKeyAtPath } from "./pathUtils.js";
 import { updateDerivedOutputs } from "./derived.js";
 
@@ -90,7 +90,7 @@ export function renderKvTable(obj) {
       } else {
         const inp = document.createElement("input");
         inp.type = "text";
-        inp.value = typeof v === "string" ? v : JSON.stringify(v);
+        inp.value = typeof v === "string" ? stripTokenBraces(v) : JSON.stringify(v);
         inp.dataset.key = String(k);
         inp.style.width = "100%";
         inp.style.boxSizing = "border-box";
@@ -106,7 +106,7 @@ export function renderKvTable(obj) {
       }
     } else {
       th.textContent = String(k);
-      td.textContent = typeof v === "string" ? v : JSON.stringify(v, null, 2);
+      td.textContent = typeof v === "string" ? stripTokenBraces(v) : JSON.stringify(v, null, 2);
     }
 
     tr.appendChild(tdSel);
@@ -205,15 +205,6 @@ export function addFieldInline() {
 
   if (keyEl) keyEl.value = "";
   if (valEl) valEl.value = "";
-
-  // If user typed an expression (like @state.foo) without token braces, normalize it to a STRING token by default.
-  // Use {{{...}}} when you need RAW output (booleans/numbers).
-  if (typeof obj[k] === "string") {
-    const s = obj[k].trim();
-    const isStrToken = /^\{\{[^}]+\}\}$/.test(s);
-    const isRawToken = /^\{\{\{[^}]+\}\}\}$/.test(s);
-    if (s.startsWith("@") && !isStrToken && !isRawToken) obj[k] = "{{" + s + "}}";
-  }
 
   updateDerivedOutputs();
   renderKvTable(state.editableObject);
@@ -390,7 +381,7 @@ export function renderNestedTable() {
       } else {
         const inp = document.createElement("input");
         inp.type = "text";
-        inp.value = typeof v === "string" ? v : JSON.stringify(v);
+        inp.value = typeof v === "string" ? stripTokenBraces(v) : JSON.stringify(v);
         inp.style.width = "100%";
         inp.style.boxSizing = "border-box";
         inp.style.padding = "7px 8px";
@@ -411,7 +402,7 @@ export function renderNestedTable() {
         td.appendChild(inp);
       }
     } else {
-      td.textContent = typeof v === "string" ? v : JSON.stringify(v, null, 2);
+      td.textContent = typeof v === "string" ? stripTokenBraces(v) : JSON.stringify(v, null, 2);
     }
 
     tr.appendChild(tdSel);
