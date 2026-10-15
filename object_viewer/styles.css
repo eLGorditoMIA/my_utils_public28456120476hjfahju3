@@ -20,6 +20,7 @@ body {
 }
 
 header {
+  position: relative;
   padding: 20px 18px 8px 18px;
   border-bottom: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
@@ -29,6 +30,31 @@ header h1 {
   margin: 0;
   font-size: 18px;
   letter-spacing: 0.2px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.version-badge {
+  flex: none;
+}
+
+.icon-btn {
+  padding: 4px 9px;
+  font-size: 11px;
 }
 
 header p {
@@ -64,6 +90,10 @@ main {
 
   button {
     width: 100%;
+  }
+
+  .header-top button {
+    width: auto;
   }
 
   textarea {
@@ -257,4 +287,11 @@ pre {
 .small {
   font-size: 11px;
   color: var(--muted);
+}
+
+mark {
+  background: #ffd43b;
+  color: #111;
+  padding: 0 2px;
+  border-radius: 3px;
 }

@@ -46,6 +46,8 @@ export function generateConcatFromTemplate(template) {
   return "CONCAT(" + out.join(", ") + ")";
 }
 
+const BARE_TOKEN_RE = /^@[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/;
+
 export function coerceValue(raw) {
   const s = raw == null ? "" : String(raw);
   const t = s.trim();
@@ -60,6 +62,10 @@ export function coerceValue(raw) {
   if (/^\{\{[^}]+\}\}$/.test(t)) return t;
   if (/^\{\{\{[^}]+\}\}\}$/.test(t)) return t;
 
+  // A bare @state.x-style value (optionally dotted) is a script variable
+  // token, same as if typed with the {{...}} wrapper.
+  if (BARE_TOKEN_RE.test(t)) return "{{" + t + "}}";
+
   // If user typed valid JSON (object/array/null/string/number), accept it.
   // Example: {"a":1} or [1,2] or null or "text"
   try {
@@ -70,12 +76,102 @@ export function coerceValue(raw) {
   }
 }
 
-export function objectToTemplate(obj) {
-  const o = obj || {};
-  const keys = Object.keys(o);
-  keys.sort((a, b) => a.localeCompare(b));
+/**
+ * Strips a token's {{...}}/{{{...}}} wrapper down to the bare expression
+ * inside, for display purposes only (Pretty JSON, Key/Value table). The
+ * underlying stored value keeps its braces — this never touches state.
+ */
+export function stripTokenBraces(v) {
+  if (typeof v !== "string") return v;
+  const t = v.trim();
+  let m = /^\{\{\{([^}]+)\}\}\}$/.exec(t);
+  if (m) return m[1].trim();
+  m = /^\{\{([^}]+)\}\}$/.exec(t);
+  if (m) return m[1].trim();
+  return v;
+}
 
-  const out = {};
+/**
+ * Deep-maps an object/array, stripping token braces off every leaf string
+ * value, for display only.
+ */
+export function toDisplayObject(obj) {
+  if (Array.isArray(obj)) return obj.map(toDisplayObject);
+  if (obj !== null && typeof obj === "object") {
+    const out = {};
+    Object.keys(obj).forEach((k) => (out[k] = toDisplayObject(obj[k])));
+    return out;
+  }
+  return stripTokenBraces(obj);
+}
+
+/**
+ * Deep-maps an object/array, wrapping any bare (or quoted-but-unwrapped)
+ * @state.x-style string value into its {{...}} token form. Lets input like
+ * plain JSON `{"firstName":"@state.test"}` (no braces) or a round-tripped
+ * copy of the brace-free Pretty JSON display still be recognized as a token.
+ */
+export function wrapBareTokens(x) {
+  if (Array.isArray(x)) return x.map(wrapBareTokens);
+  if (x !== null && typeof x === "object") {
+    const out = {};
+    Object.keys(x).forEach((k) => (out[k] = wrapBareTokens(x[k])));
+    return out;
+  }
+  if (typeof x === "string" && BARE_TOKEN_RE.test(x.trim())) return "{{" + x.trim() + "}}";
+  return x;
+}
+
+/**
+ * Pretty-prints an object/array with NO quotes anywhere — keys and string
+ * values are written bare, exactly as you'd type them. Intended for the
+ * already-stripped display object (see toDisplayObject), not the raw
+ * token-wrapped state.
+ */
+export function stringifyPrettyObject(obj, indent) {
+  const sp = typeof indent === "number" ? " ".repeat(indent) : "  ";
+
+  function renderLeaf(v) {
+    if (v === null || v === undefined) return "null";
+    return String(v);
+  }
+
+  function render(val, level) {
+    const pad = sp.repeat(level);
+    const padIn = sp.repeat(level + 1);
+
+    if (Array.isArray(val)) {
+      if (!val.length) return "[]";
+      return "[\n" + val.map((v) => padIn + (v !== null && typeof v === "object" ? render(v, level + 1) : renderLeaf(v))).join(",\n") + "\n" + pad + "]";
+    }
+
+    if (val !== null && typeof val === "object") {
+      const keys = Object.keys(val);
+      if (!keys.length) return "{}";
+      return (
+        "{\n" +
+        keys
+          .map((k) => padIn + String(k) + ": " + (val[k] !== null && typeof val[k] === "object" ? render(val[k], level + 1) : renderLeaf(val[k])))
+          .join(",\n") +
+        "\n" +
+        pad +
+        "}"
+      );
+    }
+
+    return renderLeaf(val);
+  }
+
+  return render(obj, 0);
+}
+
+export function objectToTemplate(obj) {
+  const isArr = Array.isArray(obj);
+  const o = obj || (isArr ? [] : {});
+  // Arrays keep their index order; objects get a stable, sorted key order.
+  const keys = isArr ? o.map((_, i) => i) : Object.keys(o).sort((a, b) => a.localeCompare(b));
+
+  const out = isArr ? [] : {};
   for (const k of keys) {
     const v = o[k];
     if (typeof v === "string" && /^\{\{[^}]+\}\}$/.test(v.trim())) {
@@ -100,7 +196,8 @@ export function objectToTemplate(obj) {
   const marker = "__RAW_TOKEN_MARKER__";
   const rawTokenMap = {};
 
-  for (const k of Object.keys(out)) {
+  const outKeys = isArr ? out.map((_, i) => i) : Object.keys(out);
+  for (const k of outKeys) {
     const v = out[k];
     if (typeof v === "string" && /^\{\{\{[^}]+\}\}\}$/.test(v)) {
       rawTokenMap[k] = v;

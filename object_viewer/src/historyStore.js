@@ -24,6 +24,7 @@ export function loadHistory() {
 export function loadHistoryLimit() {
   try {
     const raw = localStorage.getItem("concat_json_viewer_history_limit_v1");
+    if (raw === null) return 10;
     const n = Number(raw);
     if (isNaN(n)) return 10;
     return Math.max(0, Math.min(200, n));
@@ -35,6 +36,7 @@ export function loadHistoryLimit() {
 export function loadHistoryPageSize() {
   try {
     const raw = localStorage.getItem("concat_json_viewer_history_page_size_v1");
+    if (raw === null) return 6;
     const n = Number(raw);
     if (isNaN(n)) return 6;
     return Math.max(1, Math.min(50, n));

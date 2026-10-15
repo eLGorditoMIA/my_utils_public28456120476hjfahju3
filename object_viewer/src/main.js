@@ -1,8 +1,8 @@
 import { state } from "./state.js";
-import { setStatus } from "./dom.js";
+import { setStatus, escapeHtml, highlightMatches } from "./dom.js";
 import { extractJsonTemplate, parseJsonTemplate } from "./templateParser.js";
 import { generateConcatFromTemplate } from "./concatBuilder.js";
-import { applyJsonFilter } from "./derived.js";
+import { applyJsonFilter, updateDerivedOutputs } from "./derived.js";
 import { saveHistory, loadHistory, loadHistoryLimit, loadHistoryPageSize } from "./historyStore.js";
 import {
   renderHistory,
@@ -25,6 +25,7 @@ import {
   nestedApply,
   nestedAdd,
   nestedDeleteSelected,
+  hideNestedEditor,
 } from "./table.js";
 
 function openSettings() {
@@ -36,6 +37,60 @@ function closeSettings() {
   const p = document.getElementById("settingsPanel");
   if (p) p.style.display = "none";
 }
+
+function makeFetchedDocPanel(panelId, contentId, fileName, searchId) {
+  let loaded = false;
+  let rawText = "";
+
+  function render() {
+    const contentEl = document.getElementById(contentId);
+    const searchEl = document.getElementById(searchId);
+    const filter = searchEl ? searchEl.value.trim() : "";
+    if (!filter) {
+      contentEl.innerHTML = escapeHtml(rawText);
+      return;
+    }
+    const lower = filter.toLowerCase();
+    const matchingLines = rawText.split("\n").filter((line) => line.toLowerCase().includes(lower));
+    if (!matchingLines.length) {
+      contentEl.textContent = "No matches.";
+      return;
+    }
+    contentEl.innerHTML = highlightMatches(matchingLines.join("\n"), filter);
+  }
+
+  const searchEl = document.getElementById(searchId);
+  if (searchEl) searchEl.addEventListener("input", render);
+
+  return {
+    open() {
+      const p = document.getElementById(panelId);
+      if (p) p.style.display = "block";
+      if (loaded) return;
+      loaded = true;
+      fetch(fileName)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.text();
+        })
+        .then((text) => {
+          rawText = text;
+          render();
+        })
+        .catch((err) => {
+          loaded = false;
+          document.getElementById(contentId).textContent = `Could not load ${fileName}: ` + err.message;
+        });
+    },
+    close() {
+      const p = document.getElementById(panelId);
+      if (p) p.style.display = "none";
+    },
+  };
+}
+
+const howtoPanel = makeFetchedDocPanel("howtoPanel", "howtoContent", "HOWTO.md", "howtoSearch");
+const changelogPanel = makeFetchedDocPanel("changelogPanel", "changelogContent", "CHANGELOG.md", "changelogSearch");
 
 function render() {
   const input = document.getElementById("input").value;
@@ -74,8 +129,12 @@ function render() {
   applyJsonFilter();
   renderKvTable(state.editableObject);
 
-  // Generate CONCAT from extracted template (preserves {{...}} tokens)
-  state.generatedConcat = generateConcatFromTemplate(template);
+  // Generate CONCAT from extracted template (preserves {{...}} tokens).
+  // When the input was a JS-literal with bare identifiers, the raw template text
+  // itself isn't valid JSON (unquoted keys/identifiers), so regenerate CONCAT from
+  // the normalized/parsed object instead of echoing the raw text back out.
+  const templateForConcat = parseMode === "js_literal_coerced" ? JSON.stringify(parsed) : template;
+  state.generatedConcat = generateConcatFromTemplate(templateForConcat);
   document.getElementById("concatOut").textContent = state.generatedConcat || "(could not generate CONCAT)";
 
   const noteText = notes.length ? ` Notes: ${notes.join(" | ")}` : "";
@@ -142,6 +201,18 @@ function copyPrettyJson() {
   );
 }
 
+function copyPrettyObject() {
+  const text = document.getElementById("objectOut")?.textContent || "";
+  if (!text || text.includes("(pretty object will appear here)")) {
+    setStatus("bad", "Nothing to copy yet — click Render first.");
+    return;
+  }
+  navigator.clipboard.writeText(text).then(
+    () => setStatus("ok", "Copied pretty object to clipboard."),
+    (err) => setStatus("bad", "Clipboard copy failed: " + (err && err.message ? err.message : String(err)))
+  );
+}
+
 function copyGeneratedConcat() {
   const t = state.generatedConcat || "";
   if (!t) {
@@ -152,6 +223,20 @@ function copyGeneratedConcat() {
     () => setStatus("ok", "Copied generated CONCAT to clipboard."),
     (err) => setStatus("bad", "Clipboard copy failed: " + (err && err.message ? err.message : String(err)))
   );
+}
+
+function startNew(isArray) {
+  hideNestedEditor();
+  document.getElementById("input").value = "";
+  state.lastTemplate = "";
+  state.editableObject = isArray ? [] : {};
+
+  renderKvTable(state.editableObject);
+  updateDerivedOutputs();
+
+  setStatus("ok", isArray ? "Started a new empty array. Use Add field below to push items." : "Started a new empty object. Use Add field below to add keys.");
+
+  document.getElementById("newKey")?.focus();
 }
 
 function clearAll() {
@@ -167,14 +252,35 @@ function clearAll() {
 
 // Wire up
 document.getElementById("renderBtn").addEventListener("click", render);
+document.getElementById("newObjectBtn").addEventListener("click", () => startNew(false));
+document.getElementById("newArrayBtn").addEventListener("click", () => startNew(true));
 document.getElementById("copyTemplateBtn").addEventListener("click", copyExtractedTemplate);
 document.getElementById("settingsBtn").addEventListener("click", openSettings);
 document.getElementById("settingsCloseBtn").addEventListener("click", closeSettings);
+document.getElementById("howtoBtn").addEventListener("click", howtoPanel.open);
+document.getElementById("howtoCloseBtn").addEventListener("click", howtoPanel.close);
+document.getElementById("changelogBtn").addEventListener("click", changelogPanel.open);
+document.getElementById("changelogCloseBtn").addEventListener("click", changelogPanel.close);
 
 document.getElementById("copyPrettyBtn").addEventListener("click", copyPrettyJson);
 document.getElementById("jsonFilter").addEventListener("input", applyJsonFilter);
 document.getElementById("copyEditedJsonBtn").addEventListener("click", copyEditedJson);
 document.getElementById("copyConcatBtn").addEventListener("click", copyGeneratedConcat);
+document.getElementById("toggleConcatBtn").addEventListener("click", () => {
+  const body = document.getElementById("concatBody");
+  const btn = document.getElementById("toggleConcatBtn");
+  const collapsed = body.style.display === "none";
+  body.style.display = collapsed ? "block" : "none";
+  btn.textContent = collapsed ? "Hide" : "Show";
+});
+document.getElementById("copyObjectBtn").addEventListener("click", copyPrettyObject);
+document.getElementById("toggleObjectBtn").addEventListener("click", () => {
+  const body = document.getElementById("objectBody");
+  const btn = document.getElementById("toggleObjectBtn");
+  const collapsed = body.style.display === "none";
+  body.style.display = collapsed ? "block" : "none";
+  btn.textContent = collapsed ? "Hide" : "Show";
+});
 document.getElementById("addFieldBtn").addEventListener("click", addField);
 document.getElementById("addInlineBtn").addEventListener("click", addFieldInline);
 document.getElementById("newKey").addEventListener("keydown", (e) => {
@@ -222,6 +328,6 @@ state.history = state.history.slice(0, state.historyLimit);
 saveHistory();
 renderHistory();
 
-// Seed with an example for convenience
+// Seed with a generic example for convenience
 document.getElementById("input").value =
-  'CONCAT("{\\"searchType\\":\\"", @state.searchType, "\\",\\"client_id\\":\\"", @state.clientIdTemp, "\\",\\"client_name\\":\\"", @state.clientNameTemp, "\\",\\"customer_search_value\\":\\"", @state.cust_pln_value_temp, "\\",\\"by_customer_payer_id\\":\\"", @state.checkbox_customer_health_plan_id_state, "\\",\\"by_customer_payer_name\\":\\"", @state.checkbox_customer_health_plan_name_state, "\\",\\"allow_partial_search\\":\\"", @state.allow_partial_search, "\\"}")';
+  'CONCAT("{\\"id\\":\\"123\\",\\"name\\":\\"", @state.name, "\\",\\"status\\":\\"", @state.status, "\\",\\"code\\":\\"", @state.code, "\\",\\"count\\":\\"", @state.count, "\\",\\"flag_a\\":\\"", @state.flag_a, "\\",\\"flag_b\\":\\"", @state.flag_b, "\\"}")';

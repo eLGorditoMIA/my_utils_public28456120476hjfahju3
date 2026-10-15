@@ -3,15 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CONCAT JSON Viewer</title>
+    <title>CONCAT / JSON Workbench</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header>
-      <h1>CONCAT JSON Viewer</h1>
+      <div class="header-top">
+        <div class="header-left">
+          <h1>CONCAT / JSON Workbench</h1>
+          <button id="newObjectBtn" class="secondary icon-btn" title="Start a new empty object {}">+ {}</button>
+          <button id="newArrayBtn" class="secondary icon-btn" title="Start a new empty array []">+ []</button>
+        </div>
+        <span id="appVersion" class="pill version-badge">v1.10</span>
+      </div>
       <p>
-        Paste your ServiceNow <span class="pill">CONCAT("{...}")</span> expression (or just the JSON) and click <b>Render</b>. It will extract the JSON template and show it as pretty JSON + a
-        key/value table.
+        Paste a ServiceNow <span class="pill">CONCAT("{...}")</span> expression, plain JSON, or even a JS object literal with bare identifiers (e.g. <span class="pill">{ id: "1", tags: [a, 1] }</span
+        >) and click <b>Render</b>. It normalizes the input into valid JSON, lets you filter/edit it as a key/value table, and regenerates a valid CONCAT expression.
       </p>
     </header>
 
@@ -27,7 +34,35 @@
             <button id="renderBtn">Render</button>
             <button id="copyTemplateBtn" class="secondary">Copy extracted JSON template</button>
             <button id="settingsBtn" class="secondary">Settings</button>
+            <button id="howtoBtn" class="secondary">How to use</button>
+            <button id="changelogBtn" class="secondary">What's new</button>
             <button id="clearBtn" class="danger">Clear</button>
+          </div>
+
+          <div id="howtoPanel" class="card" style="display: none; margin-top: 12px; border-radius: 12px">
+            <div class="card-h">
+              <div>How to use each section</div>
+              <div class="row" style="margin: 0; gap: 8px">
+                <input id="howtoSearch" type="text" placeholder="Search..." style="width: 160px; padding: 8px 10px; border-radius: 10px" />
+                <button id="howtoCloseBtn" class="danger">Close</button>
+              </div>
+            </div>
+            <div class="card-b" style="background: rgba(17, 26, 51, 0.35)">
+              <pre id="howtoContent" style="white-space: pre-wrap; word-break: break-word; max-height: 420px; overflow-y: auto">Loading…</pre>
+            </div>
+          </div>
+
+          <div id="changelogPanel" class="card" style="display: none; margin-top: 12px; border-radius: 12px">
+            <div class="card-h">
+              <div>What's new</div>
+              <div class="row" style="margin: 0; gap: 8px">
+                <input id="changelogSearch" type="text" placeholder="Search..." style="width: 160px; padding: 8px 10px; border-radius: 10px" />
+                <button id="changelogCloseBtn" class="danger">Close</button>
+              </div>
+            </div>
+            <div class="card-b" style="background: rgba(17, 26, 51, 0.35)">
+              <pre id="changelogContent" style="white-space: pre-wrap; word-break: break-word; max-height: 420px; overflow-y: auto">Loading…</pre>
+            </div>
           </div>
 
           <div id="settingsPanel" class="card" style="display: none; margin-top: 12px; border-radius: 12px">
@@ -138,14 +173,33 @@
 
               <div style="margin-top: 10px">
                 <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
-                  <span>Generated CONCAT</span>
-                  <button id="copyConcatBtn" class="secondary">Copy CONCAT</button>
+                  <span>Pretty Object (no quotes)</span>
+                  <span style="display: flex; gap: 8px">
+                    <button id="toggleObjectBtn" class="secondary">Show</button>
+                    <button id="copyObjectBtn" class="secondary">Copy pretty object</button>
+                  </span>
                 </div>
-                <pre id="concatOut" style="white-space: pre-wrap; word-break: break-word">(generated CONCAT will appear here)</pre>
-                <div class="small" style="margin-top: 6px">
-                  Tokens <span class="pill">{{...}}</span> are treated as <b>string tokens</b> by default (quoted), matching the original working pattern. Use <span class="pill">{{{...}}}</span> only
-                  when you want a <b>raw token</b> (unquoted, for booleans/numbers). Example: <span class="pill">{{@state.clientNameTemp}}</span> (string) vs
-                  <span class="pill">{{{@state.allow_partial_search}}}</span> (raw).
+                <div id="objectBody" style="display: none">
+                  <pre id="objectOut">(pretty object will appear here)</pre>
+                  <div class="small" style="margin-top: 6px">Same data as Pretty JSON, shown exactly as typed — no quotes around keys, strings, or tokens.</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 10px">
+                <div class="small" style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                  <span>Generated CONCAT</span>
+                  <span style="display: flex; gap: 8px">
+                    <button id="toggleConcatBtn" class="secondary">Show</button>
+                    <button id="copyConcatBtn" class="secondary">Copy CONCAT</button>
+                  </span>
+                </div>
+                <div id="concatBody" style="display: none">
+                  <pre id="concatOut" style="white-space: pre-wrap; word-break: break-word">(generated CONCAT will appear here)</pre>
+                  <div class="small" style="margin-top: 6px">
+                    Tokens <span class="pill">{{...}}</span> are treated as <b>string tokens</b> by default (quoted), matching the original working pattern. Use <span class="pill">{{{...}}}</span> only
+                    when you want a <b>raw token</b> (unquoted, for booleans/numbers). Example: <span class="pill">{{@state.name}}</span> (string) vs
+                    <span class="pill">{{{@state.flag_a}}}</span> (raw).
+                  </div>
                 </div>
               </div>
             </div>

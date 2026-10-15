@@ -48,3 +48,32 @@ export function renameKeyAtPath(root, path, oldKey, newKey) {
   obj[newKey] = val;
   return root;
 }
+
+/**
+ * Recursively filters an object by key/value substring match, drilling into
+ * nested objects AND arrays (of objects, arrays, or primitives) so only the
+ * matching leaves (and their parent keys/indices, needed to show where the
+ * match lives) are kept, pruning non-matching siblings/items at every level.
+ */
+export function deepFilterObject(obj, filter, stringifyFn) {
+  const isArr = Array.isArray(obj);
+  const results = isArr ? [] : {};
+  const set = (k, v) => (isArr ? results.push(v) : (results[k] = v));
+  Object.entries(obj || {}).forEach(([k, v]) => {
+    const isNestedContainer = v !== null && typeof v === "object";
+    if (isNestedContainer) {
+      if (k.toLowerCase().includes(filter)) {
+        set(k, v);
+      } else {
+        const nested = deepFilterObject(v, filter, stringifyFn);
+        if (Object.keys(nested).length) set(k, nested);
+      }
+    } else {
+      const t = stringifyFn(v);
+      if (k.toLowerCase().includes(filter) || String(t).toLowerCase().includes(filter)) {
+        set(k, v);
+      }
+    }
+  });
+  return results;
+}
