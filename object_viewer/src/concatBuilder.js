@@ -168,8 +168,9 @@ export function stringifyPrettyObject(obj, indent) {
 export function objectToTemplate(obj) {
   const isArr = Array.isArray(obj);
   const o = obj || (isArr ? [] : {});
-  // Arrays keep their index order; objects get a stable, sorted key order.
-  const keys = isArr ? o.map((_, i) => i) : Object.keys(o).sort((a, b) => a.localeCompare(b));
+  // Arrays keep their index order; objects keep insertion order, which the
+  // Key/Value table's Up/Down reorder buttons let you control directly.
+  const keys = isArr ? o.map((_, i) => i) : Object.keys(o);
 
   const out = isArr ? [] : {};
   for (const k of keys) {

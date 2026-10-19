@@ -21,6 +21,16 @@ e.g. `index.html`, `styles.css`, `src/*.js`):
 
 Do this for every change, including small fixes — not just new features.
 
+## Test plan maintenance
+
+Once the user accepts/confirms the final result of a change (a feature,
+fix, or behavior change they've tested and approved), add a new test
+case to `object_viewer/TEST_PLAN.md` for it, or update an existing case
+if the change modifies behavior an existing case already covers. Follow
+the existing format: imperative, reproducible steps, grouped under the
+relevant feature section, with a "Touches" line listing the files
+involved.
+
 ## GitHub contributors
 
 When pushing this repo to GitHub, only `elgorditomia` should be added/listed

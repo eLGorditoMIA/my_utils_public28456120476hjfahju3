@@ -50,6 +50,46 @@ export function renameKeyAtPath(root, path, oldKey, newKey) {
 }
 
 /**
+ * Move `key` one position earlier ("up") or later ("down") among its
+ * object's own keys. Objects can't reorder keys in place, so this returns a
+ * NEW object with the same values in the new key order (same object
+ * reference back if already at that boundary, so callers can skip
+ * re-rendering on a no-op).
+ * @param {Record<string, any>} obj
+ * @param {string} key
+ * @param {"up"|"down"} direction
+ */
+export function reorderObjectKey(obj, key, direction) {
+  const keys = Object.keys(obj || {});
+  const idx = keys.indexOf(key);
+  const newIdx = idx + (direction === "up" ? -1 : 1);
+  if (idx === -1 || newIdx < 0 || newIdx >= keys.length) return obj;
+
+  const reordered = keys.slice();
+  [reordered[idx], reordered[newIdx]] = [reordered[newIdx], reordered[idx]];
+
+  const next = {};
+  for (const k of reordered) next[k] = obj[k];
+  return next;
+}
+
+/**
+ * Move the array element at `index` one position earlier ("up") or later
+ * ("down"). Mutates `arr` in place since arrays can reorder without
+ * replacing the reference.
+ * @param {any[]} arr
+ * @param {number} index
+ * @param {"up"|"down"} direction
+ */
+export function moveArrayItem(arr, index, direction) {
+  if (!Array.isArray(arr)) return arr;
+  const newIndex = index + (direction === "up" ? -1 : 1);
+  if (newIndex < 0 || newIndex >= arr.length) return arr;
+  [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
+  return arr;
+}
+
+/**
  * Recursively filters an object by key/value substring match, drilling into
  * nested objects AND arrays (of objects, arrays, or primitives) so only the
  * matching leaves (and their parent keys/indices, needed to show where the

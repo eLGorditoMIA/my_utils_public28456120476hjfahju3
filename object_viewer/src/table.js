@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { setStatus } from "./dom.js";
 import { coerceValue, stripTokenBraces } from "./concatBuilder.js";
-import { isObjectLike, formatPath, getAtPath, renameKeyAtPath } from "./pathUtils.js";
+import { isObjectLike, formatPath, getAtPath, setAtPath, renameKeyAtPath, reorderObjectKey, moveArrayItem } from "./pathUtils.js";
 import { updateDerivedOutputs } from "./derived.js";
 
 /**
@@ -17,7 +17,7 @@ export function renderKvTable(obj) {
   if (!keys.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 3;
+    td.colSpan = 4;
     td.style.color = "rgba(255,255,255,0.55)";
     td.textContent = "(no keys found)";
     tr.appendChild(td);
@@ -25,8 +25,7 @@ export function renderKvTable(obj) {
     return;
   }
 
-  if (!isArr) keys.sort((a, b) => a.localeCompare(b));
-  for (const k of keys) {
+  keys.forEach((k, i) => {
     const tr = document.createElement("tr");
 
     const tdSel = document.createElement("td");
@@ -109,11 +108,59 @@ export function renderKvTable(obj) {
       td.textContent = typeof v === "string" ? stripTokenBraces(v) : JSON.stringify(v, null, 2);
     }
 
+    const tdOrder = makeOrderCell(i === 0, i === keys.length - 1, () => reorderRootRow(k, "up"), () => reorderRootRow(k, "down"));
+
     tr.appendChild(tdSel);
     tr.appendChild(th);
     tr.appendChild(td);
+    tr.appendChild(tdOrder);
     tbody.appendChild(tr);
+  });
+}
+
+/**
+ * Builds a "sel"-column-style cell with Up/Down reorder buttons, disabled at
+ * whichever end of the list is already reached.
+ * @param {boolean} atTop
+ * @param {boolean} atBottom
+ * @param {() => void} onUp
+ * @param {() => void} onDown
+ */
+function makeOrderCell(atTop, atBottom, onUp, onDown) {
+  const td = document.createElement("td");
+  td.style.width = "80px";
+  td.style.whiteSpace = "nowrap";
+
+  const upBtn = document.createElement("button");
+  upBtn.type = "button";
+  upBtn.className = "secondary icon-btn";
+  upBtn.title = "Move up";
+  upBtn.textContent = "↑";
+  upBtn.disabled = atTop;
+  upBtn.addEventListener("click", onUp);
+
+  const downBtn = document.createElement("button");
+  downBtn.type = "button";
+  downBtn.className = "secondary icon-btn";
+  downBtn.title = "Move down";
+  downBtn.textContent = "↓";
+  downBtn.disabled = atBottom;
+  downBtn.addEventListener("click", onDown);
+
+  td.appendChild(upBtn);
+  td.appendChild(downBtn);
+  return td;
+}
+
+function reorderRootRow(key, direction) {
+  const obj = state.editableObject || {};
+  if (Array.isArray(obj)) {
+    moveArrayItem(obj, Number(key), direction);
+  } else {
+    state.editableObject = reorderObjectKey(obj, key, direction);
   }
+  updateDerivedOutputs();
+  renderKvTable(state.editableObject);
 }
 
 function onKeyEdit(e) {
@@ -273,7 +320,7 @@ export function renderNestedTable() {
   if (!isObjectLike(node)) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 3;
+    td.colSpan = 4;
     td.style.color = "rgba(255,255,255,0.55)";
     td.textContent = "(not an object/array)";
     tr.appendChild(td);
@@ -288,15 +335,13 @@ export function renderNestedTable() {
   if (Array.isArray(node)) {
     for (let i = 0; i < node.length; i++) entries.push([i, node[i]]);
   } else {
-    const ks = Object.keys(node);
-    ks.sort((a, b) => a.localeCompare(b));
-    for (const k of ks) entries.push([k, node[k]]);
+    for (const k of Object.keys(node)) entries.push([k, node[k]]);
   }
 
   if (!entries.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 3;
+    td.colSpan = 4;
     td.style.color = "rgba(255,255,255,0.55)";
     td.textContent = "(empty)";
     tr.appendChild(td);
@@ -304,7 +349,7 @@ export function renderNestedTable() {
     return;
   }
 
-  for (const [k, v] of entries) {
+  entries.forEach(([k, v], i) => {
     const tr = document.createElement("tr");
 
     const tdSel = document.createElement("td");
@@ -405,11 +450,30 @@ export function renderNestedTable() {
       td.textContent = typeof v === "string" ? stripTokenBraces(v) : JSON.stringify(v, null, 2);
     }
 
+    const tdOrder = makeOrderCell(i === 0, i === entries.length - 1, () => reorderNestedRow(k, "up"), () => reorderNestedRow(k, "down"));
+
     tr.appendChild(tdSel);
     tr.appendChild(th);
     tr.appendChild(td);
+    tr.appendChild(tdOrder);
     tbody.appendChild(tr);
+  });
+}
+
+function reorderNestedRow(key, direction) {
+  const root = state.editableObject || {};
+  const path = state.nestedPath || [];
+  const node = getAtPath(root, path);
+  if (!isObjectLike(node)) return;
+
+  if (Array.isArray(node)) {
+    moveArrayItem(node, Number(key), direction);
+  } else {
+    const reordered = reorderObjectKey(node, key, direction);
+    setAtPath(root, path, reordered);
   }
+  updateDerivedOutputs();
+  renderNestedTable();
 }
 
 export function nestedBack() {

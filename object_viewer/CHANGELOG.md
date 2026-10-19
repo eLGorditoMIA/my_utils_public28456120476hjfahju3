@@ -3,6 +3,59 @@
 All notable changes to this project are documented here, newest first.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 2026-10-19 (4)
+
+### Added
+- `TEST_PLAN.md`: a manual regression test plan covering every feature
+  (input parsing modes, create new object/array, Pretty JSON + filter,
+  Pretty Object, Generated CONCAT, Key/Value table incl. reorder, nested
+  editor, history, settings, how-to/changelog search, all copy buttons),
+  written as reproducible imperative steps for future back-testing.
+
+## 2026-10-19 (3)
+
+### Added
+- Up/Down reorder buttons on every Key/Value table row (root table and the
+  nested editor), so you can control field order directly instead of being
+  stuck with whatever order the input parsed into. Objects are rebuilt with
+  the new key order (`reorderObjectKey` in `pathUtils.js`); arrays swap
+  elements in place (`moveArrayItem`). Buttons disable at whichever end of
+  the list is already reached.
+
+### Changed
+- The Key/Value table, Pretty JSON, Pretty Object, and Generated CONCAT/Copy
+  edited JSON no longer alphabetize object keys — they all now follow
+  insertion order, which the new reorder buttons let you control. Previously
+  the table and `objectToTemplate` (`concatBuilder.js`) independently forced
+  alphabetical order, so reordering wouldn't have been visible anywhere.
+
+## 2026-10-19 (2)
+
+### Fixed
+- Pasting a JS object literal still wrapped in surrounding code — e.g.
+  `object=\n{ ... };\ngs.info` (an assignment prefix and/or a trailing
+  statement after the closing brace) — failed to parse instead of
+  rendering just the object. `sanitizeJsObjectText` (`jsObjectParser.js`)
+  now locates the outermost top-level `{...}`/`[...]` span (string-literal-
+  and nesting-aware via the new `findOutermostBracketSpan`) and discards
+  everything before/after it, so only the object/array literal itself gets
+  parsed. The Status bar notes "Stripped surrounding code outside the
+  object/array literal." when this kicks in.
+
+## 2026-10-19
+
+### Fixed
+- Pasting a JS object literal that still had copy-paste artifacts from code —
+  an inline `//`/`/* */` comment, a trailing semicolon after the closing
+  `}`/`]`, or a trailing comma before a closing `}`/`]` — failed to parse
+  (`JSON.parse` error) instead of rendering. `extractJsonTemplate`
+  (`templateParser.js`) now runs a new `sanitizeJsObjectText`
+  (`jsObjectParser.js`) over the input before template/bracket detection,
+  stripping comments (string-literal-aware, so `//` inside a quoted value like
+  a URL is left alone), the trailing semicolon, and trailing commas;
+  `parseJsObjectLiteral`'s bare-identifier fallback uses the same sanitizer.
+  The Status bar surfaces what was removed (e.g. "Removed inline comment(s).").
+
 ## 2026-10-15 (2)
 
 ### Fixed

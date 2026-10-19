@@ -1,4 +1,4 @@
-import { parseJsObjectLiteral } from "./jsObjectParser.js";
+import { parseJsObjectLiteral, sanitizeJsObjectText } from "./jsObjectParser.js";
 import { wrapBareTokens } from "./concatBuilder.js";
 
 /**
@@ -15,8 +15,15 @@ import { wrapBareTokens } from "./concatBuilder.js";
  */
 export function extractJsonTemplate(input) {
   const notes = [];
-  const trimmed = (input || "").trim();
-  if (!trimmed) return { template: "", notes };
+  const rawTrimmed = (input || "").trim();
+  if (!rawTrimmed) return { template: "", notes };
+
+  // Strip comments/trailing semicolon/trailing commas up front so a pasted
+  // JS object literal (as opposed to strict JSON) doesn't throw off the
+  // {}/[] detection or the CONCAT(...) isolation below.
+  const sanitized = sanitizeJsObjectText(rawTrimmed);
+  const trimmed = sanitized.text;
+  notes.push(...sanitized.notes);
 
   // If it's already JSON (starts with {/[ and ends with the matching }/]) assume it's template JSON.
   if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {

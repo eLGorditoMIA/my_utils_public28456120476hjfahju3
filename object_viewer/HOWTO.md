@@ -49,6 +49,32 @@ Paste one of these, then click **Render**:
   ```
   is handy for loading a mostly-blank template into the editor so you can fill
   in the remaining fields by hand afterward.
+  Copy-paste artifacts from editing a JS object literal in code are tolerated
+  and stripped automatically before parsing: `//` and `/* */` comments
+  (outside of quoted string values), a trailing semicolon after the closing
+  `}`/`]`, and trailing commas before a closing `}`/`]`:
+  ```
+  {
+    // seed data
+    firstName: "Alice",
+    lastName: "Smith",
+  };
+  ```
+  parses the same as `{ firstName: "Alice", lastName: "Smith" }` — the Status
+  bar notes what was removed (e.g. "Removed inline comment(s)."). Comments are
+  discarded, not preserved into the output.
+  Surrounding code pasted along with the object/array — an assignment prefix,
+  a trailing log/function call, etc. — is discarded too; only the outermost
+  `{...}`/`[...]` literal is kept:
+  ```
+  object=
+  {
+    firstName: "Alice",
+    lastName: "Smith"
+  };
+  gs.info(object);
+  ```
+  parses the same as `{ firstName: "Alice", lastName: "Smith" }` alone.
 - A top-level JSON **array** of objects:
   ```
   [{"id":"1","name":"Alice"},{"id":"2","name":"Bob"}]
@@ -144,12 +170,19 @@ through without quotes, e.g. `{{{@state.flag_a}}}`).
 
 ## Key / Value table
 
-Lists the top-level fields of the rendered object. Edit a key or value directly
-in the table; `Add field` appends a new row; check the `sel` boxes and
-`Delete selected` to remove rows. Values are coerced automatically — typing
-`true`/`false` becomes a boolean, a bare number becomes a number, valid JSON
-(e.g. `{"a":1}` or `[1,2]`) becomes a nested object/array, anything else stays
-a string. Uncheck `Enable editing` to view the table read-only.
+Lists the top-level fields of the rendered object, in insertion order (the
+order they were parsed in, or the order you've since arranged them into — the
+table is never re-sorted for you). Edit a key or value directly in the table;
+`Add field` appends a new row; check the `sel` boxes and `Delete selected` to
+remove rows. Values are coerced automatically — typing `true`/`false` becomes
+a boolean, a bare number becomes a number, valid JSON (e.g. `{"a":1}` or
+`[1,2]`) becomes a nested object/array, anything else stays a string. Uncheck
+`Enable editing` to view the table read-only.
+
+Use the **↑ / ↓** buttons in the `order` column to move a row up or down —
+they're disabled at whichever end of the list a row has already reached. This
+reordering is reflected everywhere: Pretty JSON, Pretty Object, and Generated
+CONCAT / `Copy edited JSON` all follow the same order shown in the table.
 
 ## How to use / What's new panels
 
@@ -161,6 +194,7 @@ JSON filter works. Clear the box to see the full document again.
 
 Click an object/array value in the table to drill into it — the nested editor
 opens showing that sub-object's own key/value rows, with the same add/edit/
-delete behavior, and its own further drill-down for anything nested inside it.
+delete/reorder behavior, and its own further drill-down for anything nested
+inside it.
 `Apply to parent` writes your changes back up to the parent object; `Back` steps
 up one level without discarding; `Close` exits the nested editor entirely.
