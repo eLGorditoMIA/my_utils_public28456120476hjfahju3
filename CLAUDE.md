@@ -33,7 +33,7 @@ involved.
 
 ## GitHub contributors
 
-When pushing this repo to GitHub, only `elgorditomia` should be added/listed
+When pushing this repo to GitHub, ask who should be added/listed
 as a contributor.
 
 ## Check open issues on load
