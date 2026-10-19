@@ -25,3 +25,9 @@ Do this for every change, including small fixes — not just new features.
 
 When pushing this repo to GitHub, only `elgorditomia` should be added/listed
 as a contributor.
+
+## Check open issues on load
+
+Whenever this repo is loaded/opened for work, check for open GitHub issues
+(e.g. `gh issue list --repo eLGorditoMIA/my_utils_public28456120476hjfahju3`)
+and surface any that are open before starting other work.
